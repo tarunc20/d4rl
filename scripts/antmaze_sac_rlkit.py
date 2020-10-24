@@ -16,14 +16,15 @@ from rlkit.torch.torch_rl_algorithm import TorchBatchRLAlgorithm
 
 import d4rl, gym
 
+
 def experiment(variant):
-    expl_env = gym.make(variant['env_name'])
+    expl_env = gym.make(variant["env_name"])
     eval_env = expl_env
 
     obs_dim = expl_env.observation_space.low.size
     action_dim = eval_env.action_space.low.size
 
-    M = variant['layer_size']
+    M = variant["layer_size"]
     qf1 = FlattenMlp(
         input_size=obs_dim + action_dim,
         output_size=1,
@@ -59,7 +60,7 @@ def experiment(variant):
         policy,
     )
     replay_buffer = EnvReplayBuffer(
-        variant['replay_buffer_size'],
+        variant["replay_buffer_size"],
         expl_env,
     )
     trainer = SACTrainer(
@@ -69,7 +70,7 @@ def experiment(variant):
         qf2=qf2,
         target_qf1=target_qf1,
         target_qf2=target_qf2,
-        **variant['trainer_kwargs']
+        **variant["trainer_kwargs"]
     )
     algorithm = TorchBatchRLAlgorithm(
         trainer=trainer,
@@ -78,12 +79,10 @@ def experiment(variant):
         exploration_data_collector=expl_path_collector,
         evaluation_data_collector=eval_path_collector,
         replay_buffer=replay_buffer,
-        **variant['algorithm_kwargs']
+        **variant["algorithm_kwargs"]
     )
     algorithm.to(ptu.device)
     algorithm.train()
-
-
 
 
 if __name__ == "__main__":
@@ -92,8 +91,8 @@ if __name__ == "__main__":
         algorithm="SAC",
         version="normal",
         layer_size=256,
-        env_name='antmaze-umaze-v0',
-        replay_buffer_size=int(1E6),
+        env_name="antmaze-umaze-v0",
+        replay_buffer_size=int(1e6),
         algorithm_kwargs=dict(
             num_epochs=3000,
             num_eval_steps_per_epoch=5000,
@@ -107,12 +106,12 @@ if __name__ == "__main__":
             discount=0.99,
             soft_target_tau=5e-3,
             target_update_period=1,
-            policy_lr=3E-4,
-            qf_lr=3E-4,
+            policy_lr=3e-4,
+            qf_lr=3e-4,
             reward_scale=1,
             use_automatic_entropy_tuning=True,
         ),
     )
-    setup_logger('sac_antmaze_experiments', variant=variant)
+    setup_logger("sac_antmaze_experiments", variant=variant)
     ptu.set_gpu_mode(True)  # optionally set the GPU (default=False)
     experiment(variant)

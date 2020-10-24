@@ -19,10 +19,16 @@ from PIL import Image
 from PIL.PngImagePlugin import PngInfo
 
 try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
+    sys.path.append(
+        glob.glob(
+            "../carla/dist/carla-*%d.%d-%s.egg"
+            % (
+                sys.version_info.major,
+                sys.version_info.minor,
+                "win-amd64" if os.name == "nt" else "linux-x86_64",
+            )
+        )[0]
+    )
 except IndexError:
     pass
 
@@ -34,12 +40,12 @@ from dotmap import DotMap
 try:
     import pygame
 except ImportError:
-    raise RuntimeError('cannot import pygame, make sure pygame package is installed')
+    raise RuntimeError("cannot import pygame, make sure pygame package is installed")
 
 try:
     import numpy as np
 except ImportError:
-    raise RuntimeError('cannot import numpy, make sure numpy package is installed')
+    raise RuntimeError("cannot import numpy, make sure numpy package is installed")
 
 try:
     import queue
@@ -53,7 +59,14 @@ from agents.tools.misc import is_within_distance_ahead, compute_magnitude_angle
 from agents.navigation.global_route_planner_dao import GlobalRoutePlannerDAO
 
 
-def is_within_distance(target_location, current_location, orientation, max_distance, d_angle_th_up, d_angle_th_low=0):
+def is_within_distance(
+    target_location,
+    current_location,
+    orientation,
+    max_distance,
+    d_angle_th_up,
+    d_angle_th_low=0,
+):
     """
     Check if a target object is within a certain distance from a reference object.
     A vehicle in front would be something around 0 deg, while one behind around 180 deg.
@@ -65,7 +78,9 @@ def is_within_distance(target_location, current_location, orientation, max_dista
         :param d_angle_th_low: low thereshold for angle (optional, default is 0)
         :return: True if target object is within max_distance ahead of the reference object
     """
-    target_vector = np.array([target_location.x - current_location.x, target_location.y - current_location.y])
+    target_vector = np.array(
+        [target_location.x - current_location.x, target_location.y - current_location.y]
+    )
     norm_target = np.linalg.norm(target_vector)
 
     # If the vector is too short, we can simply stop here
@@ -76,8 +91,13 @@ def is_within_distance(target_location, current_location, orientation, max_dista
         return False
 
     forward_vector = np.array(
-        [math.cos(math.radians(orientation)), math.sin(math.radians(orientation))])
-    d_angle = math.degrees(math.acos(np.clip(np.dot(forward_vector, target_vector) / norm_target, -1., 1.)))
+        [math.cos(math.radians(orientation)), math.sin(math.radians(orientation))]
+    )
+    d_angle = math.degrees(
+        math.acos(
+            np.clip(np.dot(forward_vector, target_vector) / norm_target, -1.0, 1.0)
+        )
+    )
 
     return d_angle_th_low < d_angle < d_angle_th_up
 
@@ -92,7 +112,6 @@ def compute_distance(location_1, location_2):
     z = location_2.z - location_1.z
     norm = np.linalg.norm([x, y, z]) + np.finfo(float).eps
     return norm
-
 
 
 class CarlaSyncMode(object):
@@ -110,7 +129,7 @@ class CarlaSyncMode(object):
         self.world = world
         self.sensors = sensors
         self.frame = None
-        self.delta_seconds = 1.0 / kwargs.get('fps', 20)
+        self.delta_seconds = 1.0 / kwargs.get("fps", 20)
         self._queues = []
         self._settings = None
 
@@ -118,10 +137,13 @@ class CarlaSyncMode(object):
 
     def start(self):
         self._settings = self.world.get_settings()
-        self.frame = self.world.apply_settings(carla.WorldSettings(
-            no_rendering_mode=False,
-            synchronous_mode=True,
-            fixed_delta_seconds=self.delta_seconds))
+        self.frame = self.world.apply_settings(
+            carla.WorldSettings(
+                no_rendering_mode=False,
+                synchronous_mode=True,
+                fixed_delta_seconds=self.delta_seconds,
+            )
+        )
 
         def make_queue(register_event):
             q = queue.Queue()
@@ -161,7 +183,7 @@ def draw_image(surface, image, blend=False):
 
 def get_font():
     fonts = [x for x in pygame.font.get_fonts()]
-    default_font = 'ubuntumono'
+    default_font = "ubuntumono"
     font = default_font if default_font in fonts else fonts[0]
     font = pygame.font.match_font(font)
     return pygame.font.Font(font, 14)
@@ -193,10 +215,12 @@ class Sun(object):
         self.azimuth += 0.25 * delta_seconds
         self.azimuth %= 360.0
         min_alt, max_alt = [20, 90]
-        self.altitude = 0.5 * (max_alt + min_alt) + 0.5 * (max_alt - min_alt) * math.cos(self._t)
+        self.altitude = 0.5 * (max_alt + min_alt) + 0.5 * (
+            max_alt - min_alt
+        ) * math.cos(self._t)
 
     def __str__(self):
-        return 'Sun(alt: %.2f, azm: %.2f)' % (self.altitude, self.azimuth)
+        return "Sun(alt: %.2f, azm: %.2f)" % (self.altitude, self.azimuth)
 
 
 class Storm(object):
@@ -227,7 +251,11 @@ class Storm(object):
             self._increasing = False
 
     def __str__(self):
-        return 'Storm(clouds=%d%%, rain=%d%%, wind=%d%%)' % (self.clouds, self.rain, self.wind)
+        return "Storm(clouds=%d%%, rain=%d%%, wind=%d%%)" % (
+            self.clouds,
+            self.rain,
+            self.wind,
+        )
 
 
 class Weather(object):
@@ -240,7 +268,7 @@ class Weather(object):
         self._storm = Storm(self.weather.precipitation)
 
     def reset(self):
-        weather_params = carla.WeatherParameters(sun_altitude_angle=90.)
+        weather_params = carla.WeatherParameters(sun_altitude_angle=90.0)
         self.world.set_weather(weather_params)
 
     def tick(self):
@@ -257,30 +285,31 @@ class Weather(object):
         self.world.set_weather(self.weather)
 
     def __str__(self):
-        return '%s %s' % (self._sun, self._storm)
+        return "%s %s" % (self._sun, self._storm)
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--vision_size', type=int, default=84)
-    parser.add_argument('--vision_fov', type=int, default=90)
-    parser.add_argument('--weather', default=False, action='store_true')
-    parser.add_argument('--frame_skip', type=int, default=1),
-    parser.add_argument('--steps', type=int, default=100000)
-    parser.add_argument('--multiagent', default=False, action='store_true'),
-    parser.add_argument('--lane', type=int, default=0)
-    parser.add_argument('--lights', default=False, action='store_true')
+    parser.add_argument("--vision_size", type=int, default=84)
+    parser.add_argument("--vision_fov", type=int, default=90)
+    parser.add_argument("--weather", default=False, action="store_true")
+    parser.add_argument("--frame_skip", type=int, default=1),
+    parser.add_argument("--steps", type=int, default=100000)
+    parser.add_argument("--multiagent", default=False, action="store_true"),
+    parser.add_argument("--lane", type=int, default=0)
+    parser.add_argument("--lights", default=False, action="store_true")
     args = parser.parse_args()
     return args
 
 
 class LocalPlannerModified(LocalPlanner):
-
     def __del__(self):
         pass  # otherwise it deletes our vehicle object
 
     def run_step(self):
-        return super().run_step(debug=False)  # otherwise by default shows waypoints, that interfere with our camera
+        return super().run_step(
+            debug=False
+        )  # otherwise by default shows waypoints, that interfere with our camera
 
 
 class RoamingAgent(Agent):
@@ -311,7 +340,7 @@ class RoamingAgent(Agent):
         throttle = action.throttle
         brake = action.brake
         steer = action.steer
-        #print('tbsl:', throttle, brake, steer, traffic_light)
+        # print('tbsl:', throttle, brake, steer, traffic_light)
         if brake == 0.0:
             return np.array([throttle, steer])
         else:
@@ -340,7 +369,7 @@ class RoamingAgent(Agent):
 
         # check for the state of the traffic lights
         traffic_light_color = self._is_light_red(lights_list)
-        if traffic_light_color == 'RED' and self._follow_traffic_lights:
+        if traffic_light_color == "RED" and self._follow_traffic_lights:
             self._state = AgentState.BLOCKED_RED_LIGHT
             hazard_detected = True
 
@@ -351,7 +380,7 @@ class RoamingAgent(Agent):
             # standard local planner behavior
             control = self._local_planner.run_step()
 
-        #print ('Action chosen: ', control)
+        # print ('Action chosen: ', control)
         return control, traffic_light_color
 
     # override case class
@@ -367,13 +396,17 @@ class RoamingAgent(Agent):
 
         for traffic_light in lights_list:
             object_waypoint = self._map.get_waypoint(traffic_light.get_location())
-            if object_waypoint.road_id != ego_vehicle_waypoint.road_id or \
-                    object_waypoint.lane_id != ego_vehicle_waypoint.lane_id:
+            if (
+                object_waypoint.road_id != ego_vehicle_waypoint.road_id
+                or object_waypoint.lane_id != ego_vehicle_waypoint.lane_id
+            ):
                 continue
 
-            if is_within_distance_ahead(traffic_light.get_transform(),
-                                        self._vehicle.get_transform(),
-                                        self._proximity_threshold):
+            if is_within_distance_ahead(
+                traffic_light.get_transform(),
+                self._vehicle.get_transform(),
+                self._proximity_threshold,
+            ):
                 if traffic_light.state == carla.TrafficLightState.Red:
                     return "RED"
                 elif traffic_light.state == carla.TrafficLightState.Yellow:
@@ -382,7 +415,9 @@ class RoamingAgent(Agent):
                     if traffic_light_color is not "YELLOW":  # (more severe)
                         traffic_light_color = "GREEN"
                 else:
-                    import pdb; pdb.set_trace()
+                    import pdb
+
+                    pdb.set_trace()
                     # investigate https://carla.readthedocs.io/en/latest/python_api/#carlatrafficlightstate
 
         return traffic_light_color
@@ -405,9 +440,11 @@ class RoamingAgent(Agent):
                 sel_traffic_light = None
                 for traffic_light in lights_list:
                     loc = traffic_light.get_location()
-                    magnitude, angle = compute_magnitude_angle(loc,
-                                                               ego_vehicle_location,
-                                                               self._vehicle.get_transform().rotation.yaw)
+                    magnitude, angle = compute_magnitude_angle(
+                        loc,
+                        ego_vehicle_location,
+                        self._vehicle.get_transform().rotation.yaw,
+                    )
                     if magnitude < 60.0 and angle < min(25.0, min_angle):
                         sel_magnitude = magnitude
                         sel_traffic_light = traffic_light
@@ -415,21 +452,30 @@ class RoamingAgent(Agent):
 
                 if sel_traffic_light is not None:
                     if debug:
-                        print('=== Magnitude = {} | Angle = {} | ID = {}'.format(
-                            sel_magnitude, min_angle, sel_traffic_light.id))
+                        print(
+                            "=== Magnitude = {} | Angle = {} | ID = {}".format(
+                                sel_magnitude, min_angle, sel_traffic_light.id
+                            )
+                        )
 
                     if self._last_traffic_light is None:
                         self._last_traffic_light = sel_traffic_light
 
                     if self._last_traffic_light.state == carla.TrafficLightState.Red:
                         return "RED"
-                    elif self._last_traffic_light.state == carla.TrafficLightState.Yellow:
+                    elif (
+                        self._last_traffic_light.state == carla.TrafficLightState.Yellow
+                    ):
                         traffic_light_color = "YELLOW"
-                    elif self._last_traffic_light.state == carla.TrafficLightState.Green:
+                    elif (
+                        self._last_traffic_light.state == carla.TrafficLightState.Green
+                    ):
                         if traffic_light_color is not "YELLOW":  # (more severe)
                             traffic_light_color = "GREEN"
                     else:
-                        import pdb; pdb.set_trace()
+                        import pdb
+
+                        pdb.set_trace()
                         # investigate https://carla.readthedocs.io/en/latest/python_api/#carlatrafficlightstate
                 else:
                     self._last_traffic_light = None
@@ -437,7 +483,7 @@ class RoamingAgent(Agent):
         return traffic_light_color
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     # example call:
     # ./PythonAPI/util/config.py --map Town01 --delta-seconds 0.05
@@ -451,7 +497,14 @@ if __name__ == '__main__':
         while not done:
             action, traffic_light_color = env.compute_action()
             next_obs, reward, done, info = env.step(action, traffic_light_color)
-            print ('Reward: ', reward, 'Done: ', done, 'Location: ', env.vehicle.get_location())
+            print(
+                "Reward: ",
+                reward,
+                "Done: ",
+                done,
+                "Location: ",
+                env.vehicle.get_location(),
+            )
             if done:
                 # env.reset_init()
                 # env.reset()

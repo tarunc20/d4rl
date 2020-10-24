@@ -10,7 +10,9 @@ import argparse
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--num_episodes', type=int, default=100, help='Num trajs to collect')
+    parser.add_argument(
+        "--num_episodes", type=int, default=100, help="Num trajs to collect"
+    )
     args = parser.parse_args()
 
     np.random.seed(0)
@@ -25,11 +27,11 @@ def main():
         s = env.reset()
         returns = 0
         for t in range(50):
-            act, done = controller.get_action(env.agent_pos, env.agent_dir) 
+            act, done = controller.get_action(env.agent_pos, env.agent_dir)
             ns, rew, _, _ = env.step(act)
             returns += rew
         ravg.append(returns)
-    print('returns', np.mean(ravg))
+    print("returns", np.mean(ravg))
 
 
 if __name__ == "__main__":

@@ -1,12 +1,19 @@
 """Traffic Light Grid example."""
 from flow.envs import TrafficLightGridBenchmarkEnv
 from flow.networks import TrafficLightGridNetwork
-from flow.core.params import SumoParams, EnvParams, InitialConfig, NetParams, \
-    InFlows, SumoCarFollowingParams
+from flow.core.params import (
+    SumoParams,
+    EnvParams,
+    InitialConfig,
+    NetParams,
+    InFlows,
+    SumoCarFollowingParams,
+)
 from flow.core.params import VehicleParams
 from flow.controllers import SimCarFollowingController, GridRouter
 
-def gen_env(render='drgb'):
+
+def gen_env(render="drgb"):
     # time horizon of a single rollout
     HORIZON = 400
     # inflow rate of vehicles at every edge
@@ -40,7 +47,8 @@ def gen_env(render='drgb'):
             speed_mode="right_of_way",
         ),
         routing_controller=(GridRouter, {}),
-        num_vehicles=(N_LEFT + N_RIGHT) * N_COLUMNS + (N_BOTTOM + N_TOP) * N_ROWS)
+        num_vehicles=(N_LEFT + N_RIGHT) * N_COLUMNS + (N_BOTTOM + N_TOP) * N_ROWS,
+    )
 
     # inflows of vehicles are place on all outer edges (listed here)
     outer_edges = []
@@ -57,21 +65,18 @@ def gen_env(render='drgb'):
             edge=edge,
             vehs_per_hour=EDGE_INFLOW,
             depart_lane="free",
-            depart_speed=V_ENTER)
+            depart_speed=V_ENTER,
+        )
 
     flow_params = dict(
         # name of the experiment
         exp_tag="grid_0",
-
         # name of the flow environment the experiment is running on
         env_name=TrafficLightGridBenchmarkEnv,
-
         # name of the network class the experiment is running on
         network=TrafficLightGridNetwork,
-
         # simulator that is used by the experiment
-        simulator='traci',
-
+        simulator="traci",
         # sumo-related parameters (see flow.core.params.SumoParams)
         sim=SumoParams(
             restart_instance=True,
@@ -79,7 +84,6 @@ def gen_env(render='drgb'):
             render=render,
             save_render=True,
         ),
-
         # environment related parameters (see flow.core.params.EnvParams)
         env=EnvParams(
             horizon=HORIZON,
@@ -88,10 +92,9 @@ def gen_env(render='drgb'):
                 "switch_time": 3,
                 "num_observed": 2,
                 "discrete": False,
-                "tl_type": "actuated"
+                "tl_type": "actuated",
             },
         ),
-
         # network-related parameters (see flow.core.params.NetParams and the
         # network's documentation or ADDITIONAL_NET_PARAMS component)
         net=NetParams(
@@ -113,15 +116,13 @@ def gen_env(render='drgb'):
                 "vertical_lanes": 1,
             },
         ),
-
         # vehicles to be placed in the network at the start of a rollout (see
         # flow.core.params.VehicleParams)
         veh=vehicles,
-
         # parameters specifying the positioning of vehicles upon initialization/
         # reset (see flow.core.params.InitialConfig)
         initial=InitialConfig(
-            spacing='custom',
+            spacing="custom",
             shuffle=True,
         ),
     )

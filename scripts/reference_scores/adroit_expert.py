@@ -13,14 +13,15 @@ import numpy as np
 import pickle
 from mjrl.utils.gym_env import GymEnv
 
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--env_name', default='', help='Environment Name')
-    parser.add_argument('--num_episodes', type=int, default=100)
+    parser.add_argument("--env_name", default="", help="Environment Name")
+    parser.add_argument("--num_episodes", type=int, default=100)
     args = parser.parse_args()
 
-    policy = './policies/'+args.env_name+'.pickle'
-    pi = pickle.load(open(policy, 'rb'))
+    policy = "./policies/" + args.env_name + ".pickle"
+    pi = pickle.load(open(policy, "rb"))
     e = gym.make(args.env_name)
     e.seed(0)
     e.reset()
@@ -32,7 +33,7 @@ def main():
         for t in range(e._max_episode_steps):
             obs = e.get_obs()
             action, infos = pi.get_action(obs)
-            action = pi.get_action(obs)[0] # eval
+            action = pi.get_action(obs)[0]  # eval
             _, rew, done, info = e.step(action)
             returns += rew
             if done:
@@ -40,9 +41,8 @@ def main():
             # e.env.mj_render() # this is much faster
             # e.render()
         ravg.append(returns)
-    print(args.env_name, 'returns', np.mean(ravg))
+    print(args.env_name, "returns", np.mean(ravg))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
-

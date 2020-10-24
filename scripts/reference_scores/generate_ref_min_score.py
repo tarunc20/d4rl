@@ -4,15 +4,15 @@ policy over 100 episodes.
 """
 import d4rl
 import d4rl.flow
-import argparse 
+import argparse
 import gym
 import numpy as np
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--env_name', default='', help='Environment Name')
-    parser.add_argument('--num_episodes', type=int, default=100)
+    parser.add_argument("--env_name", default="", help="Environment Name")
+    parser.add_argument("--num_episodes", type=int, default=100)
     args = parser.parse_args()
 
     env = gym.make(args.env_name)
@@ -30,7 +30,11 @@ def main():
             if done:
                 break
         ravg.append(returns)
-    print('%s Average returns (%d ep): %f' % (args.env_name, args.num_episodes, np.mean(ravg)))
+    print(
+        "%s Average returns (%d ep): %f"
+        % (args.env_name, args.num_episodes, np.mean(ravg))
+    )
+
 
 if __name__ == "__main__":
     main()
