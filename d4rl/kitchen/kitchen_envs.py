@@ -36,9 +36,15 @@ class KitchenBase(KitchenTaskRelaxV1, OfflineEnv):
     TERMINATE_ON_TASK_COMPLETE = True
 
     def __init__(
-        self, dataset_url=None, ref_max_score=None, ref_min_score=None, **kwargs
+        self,
+        dataset_url=None,
+        ref_max_score=None,
+        ref_min_score=None,
+        dense=True,
+        **kwargs
     ):
         self.tasks_to_complete = set(self.TASK_ELEMENTS)
+        self.dense = dense
         super(KitchenBase, self).__init__(**kwargs)
         OfflineEnv.__init__(
             self,
@@ -68,11 +74,13 @@ class KitchenBase(KitchenTaskRelaxV1, OfflineEnv):
         next_goal = obs_dict["goal"]
         idx_offset = len(next_q_obs)
         completions = []
+        dense = 0
         for element in self.tasks_to_complete:
             element_idx = OBS_ELEMENT_INDICES[element]
             distance = np.linalg.norm(
                 next_obj_obs[..., element_idx - idx_offset] - next_goal[element_idx]
             )
+            dense += distance
             complete = distance < BONUS_THRESH
             if complete:
                 completions.append(element)
@@ -81,6 +89,8 @@ class KitchenBase(KitchenTaskRelaxV1, OfflineEnv):
         bonus = float(len(completions))
         reward_dict["bonus"] = bonus
         reward_dict["r_total"] = bonus
+        if self.dense:
+            reward_dict["r_total"] = dense
         score = bonus
         return reward_dict, score
 
@@ -88,11 +98,22 @@ class KitchenBase(KitchenTaskRelaxV1, OfflineEnv):
         obs, reward, done, env_info = super(KitchenBase, self).step(a, b=b)
         if self.TERMINATE_ON_TASK_COMPLETE:
             done = not self.tasks_to_complete
+        self.update_info(env_info)
         return obs, reward, done, env_info
 
-    def render(self, mode="human"):
-        # Disable rendering to speed up environment evaluation.
-        return []
+    def update_info(self, info):
+        next_q_obs = self.obs_dict["qp"]
+        next_obj_obs = self.obs_dict["obj_qp"]
+        next_goal = self.obs_dict["goal"]
+        idx_offset = len(next_q_obs)
+        for element in self.tasks_to_complete:
+            element_idx = OBS_ELEMENT_INDICES[element]
+            distance = np.linalg.norm(
+                next_obj_obs[..., element_idx - idx_offset] - next_goal[element_idx]
+            )
+            info[element + " distance to goal"] = distance
+            info[element + " success"] = distance < BONUS_THRESH
+        return info
 
 
 class KitchenMicrowaveKettleLightSliderV0(KitchenBase):
@@ -101,3 +122,31 @@ class KitchenMicrowaveKettleLightSliderV0(KitchenBase):
 
 class KitchenMicrowaveKettleBottomBurnerLightV0(KitchenBase):
     TASK_ELEMENTS = ["microwave", "kettle", "bottom burner", "light switch"]
+
+
+class KitchenMicrowaveV0(KitchenBase):
+    TASK_ELEMENTS = ["microwave"]
+
+
+class KitchenKettleV0(KitchenBase):
+    TASK_ELEMENTS = ["kettle"]
+
+
+class KitchenBottomBurnerV0(KitchenBase):
+    TASK_ELEMENTS = ["bottom burner"]
+
+
+class KitchenTopBurnerV0(KitchenBase):
+    TASK_ELEMENTS = ["top burner"]
+
+
+class KitchenSlideCabinetV0(KitchenBase):
+    TASK_ELEMENTS = ["slide cabinet"]
+
+
+class KitchenHingeCabinetV0(KitchenBase):
+    TASK_ELEMENTS = ["hinge cabinet"]
+
+
+class KitchenLightSwitchV0(KitchenBase):
+    TASK_ELEMENTS = ["light switch"]

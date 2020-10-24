@@ -221,7 +221,7 @@ class KitchenTaskRelaxV1(KitchenV0):
 
     def render(self, mode="human"):
         if mode == "rgb_array":
-            camera = engine.MovableCamera(self.sim, 1920, 2560)
+            camera = engine.MovableCamera(self.sim, 256, 256)
             camera.set_pose(
                 distance=2.2, lookat=[-0.2, 0.5, 2.0], azimuth=70, elevation=-35
             )
