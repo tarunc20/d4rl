@@ -133,8 +133,8 @@ class KitchenV0(robot_env.RobotEnv):
         # finalize step
         env_info = {
             "time": self.obs_dict["t"],
-            "obs_dict": self.obs_dict,
-            "rewards": reward_dict,
+            # "obs_dict": self.obs_dict,
+            # "rewards": reward_dict,
             "score": score,
             "images": np.asarray(self.render(mode="rgb_array")),
         }
