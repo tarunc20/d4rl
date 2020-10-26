@@ -8,8 +8,8 @@ env.reset()
 done = False
 while not done:
     o, r, d, i = env.step(env.action_space.sample())
-    print("microwave", i["microwave distance to goal"])
-    im = env.render(mode="rgb_array")
-    cv2.imshow("env", im)
-    cv2.waitKey(1)
+    # print("microwave", i["microwave distance to goal"])
+    im = env.render(mode="human")
+    # cv2.imshow("env", im)
+    # cv2.waitKey(1)
     print(r)

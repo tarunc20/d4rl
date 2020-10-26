@@ -52,9 +52,7 @@ class KitchenV0(robot_env.RobotEnv):
             ),
             frame_skip=frame_skip,
             camera_settings=dict(
-                distance=4.5,
-                azimuth=-66,
-                elevation=-65,
+                distance=2.2, lookat=[-0.2, 0.5, 2.0], azimuth=70, elevation=-35
             ),
         )
         self.init_qpos = self.sim.model.key_qpos[0].copy()
