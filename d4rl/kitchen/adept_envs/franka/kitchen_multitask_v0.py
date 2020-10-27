@@ -23,6 +23,7 @@ from d4rl.kitchen.adept_envs import robot_env
 from d4rl.kitchen.adept_envs.utils.configurable import configurable
 from gym import spaces
 from dm_control.mujoco import engine
+import quaternion
 
 from robosuite.controllers import (
     EndEffectorImpedanceController,
@@ -63,7 +64,6 @@ class KitchenV0(robot_env.RobotEnv):
         )
         self.reset_mocap_welds(self.sim)
         self.sim.forward()
-
         gripper_target = np.array(
             [-0.498, 0.005, -0.431 + 0.01]
         ) + self.sim.data.get_site_xpos("end_effector")
@@ -124,18 +124,8 @@ class KitchenV0(robot_env.RobotEnv):
         self.observation_space = spaces.Box(obs_lower, obs_upper)
 
     def ctrl_set_action(self, sim, action):
-        """For torque actuators it copies the action into mujoco ctrl field.
-        For position actuators it sets the target relative to the current qpos.
-        """
-        if sim.model.nmocap > 0:
-            _, action = np.split(action, (sim.model.nmocap * 7,))
-        if sim.data.ctrl is not None:
-            for i in range(action.shape[0]):
-                if sim.model.actuator_biastype[i] == 0:
-                    sim.data.ctrl[i] = action[i]
-                else:
-                    idx = sim.model.jnt_qposadr[sim.model.actuator_trnid[i, 0]]
-                    sim.data.ctrl[i] = sim.data.qpos[idx] + action[i]
+        self.data.ctrl[7] = action[-2]
+        self.data.ctrl[8] = action[-1]
 
     def mocap_set_action(self, sim, action):
         """The action controls the robot using mocaps. Specifically, bodies
@@ -152,10 +142,9 @@ class KitchenV0(robot_env.RobotEnv):
 
             pos_delta = action[:, :3]
             quat_delta = action[:, 3:]
-
             self.reset_mocap2body_xpos(sim)
             sim.data.mocap_pos[:] = sim.data.mocap_pos + pos_delta
-            sim.data.mocap_quat[:] = sim.data.mocap_quat
+            sim.data.mocap_quat[:] = sim.data.mocap_quat + quat_delta
 
     def reset_mocap_welds(self, sim):
         """Resets the mocap welds that we use for actuation."""
@@ -198,20 +187,13 @@ class KitchenV0(robot_env.RobotEnv):
             sim.data.mocap_quat[mocap_id][:] = sim.data.body_xquat[body_idx]
 
     def _set_action(self, action):
-        assert action.shape == (4,)
+        assert action.shape == (9,)
         action = (
             action.copy()
         )  # ensure that we don't change the action outside of this scope
-        pos_ctrl, gripper_ctrl = action[:3], action[3]
+        pos_ctrl, rot_ctrl, gripper_ctrl = action[:3], action[3:7], action[7:9]
 
         pos_ctrl *= 0.05  # limit maximum change in position
-        rot_ctrl = [
-            1.0,
-            0.0,
-            1.0,
-            0.0,
-        ]  # fixed rotation of the end effector, expressed as a quaternion
-        gripper_ctrl = np.array([gripper_ctrl, gripper_ctrl])
         assert gripper_ctrl.shape == (2,)
         action = np.concatenate([pos_ctrl, rot_ctrl, gripper_ctrl])
 
@@ -222,20 +204,94 @@ class KitchenV0(robot_env.RobotEnv):
     def _get_reward_n_score(self, obs_dict):
         raise NotImplementedError()
 
-    def grasp(self):
-        for i in range(self.skip):
-            self.sim.data.qpos[7] -= 0.0003
-            self.sim.data.qpos[8] -= 0.0003
+    def close_gripper(self):
+        for _ in range(200):
+            self._set_action(np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]))
             self.sim.step()
 
-    def rotate_ee(self):
-        for i in range(self.skip):
-            self.sim.data.qpos[6] -= 0.01
+    def open_gripper(self):
+        for _ in range(200):
+            self._set_action(np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.04, 0.04]))
             self.sim.step()
+
+    def get_ee_pose(self):
+        return self.sim.data.get_site_xpos("end_effector")
 
     def goto_pose(self, pose):
-        for i in range(self.skip):
-            self.controller.set_goal(pose)
+        gripper = self.sim.data.qpos[7:9]
+        for _ in range(200):
+            self.reset_mocap2body_xpos(self.sim)
+            delta = pose - self.get_ee_pose()
+            self._set_action(
+                np.array(
+                    [
+                        delta[0],
+                        delta[1],
+                        delta[2],
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        gripper[0],
+                        gripper[1],
+                    ]
+                )
+            )
+            self.sim.step()
+
+    def rpy_to_quat(self, rpy):
+        q = quaternion.from_euler_angles(rpy)
+        return np.array([q.x, q.y, q.z, q.w])
+
+    def quat_to_rpy(self, q):
+        q = quaternion.quaternion(q[0], q[1], q[2], q[3])
+        return quaternion.as_euler_angles(q)
+
+    def rotate_ee(self, rpy):
+        gripper = self.sim.data.qpos[7:9]
+        for _ in range(200):
+            quat = self.rpy_to_quat(rpy)
+            self.reset_mocap2body_xpos(self.sim)
+            quat_delta = quat - self.sim.data.mocap_quat
+            self._set_action(
+                np.array(
+                    [
+                        0.0,
+                        0.0,
+                        0.0,
+                        quat_delta[0],
+                        quat_delta[1],
+                        quat_delta[2],
+                        quat_delta[3],
+                        gripper[0],
+                        gripper[1],
+                    ]
+                )
+            )
+            print(quat_delta)
+            self.sim.step()
+
+    def rotate_quat_ee(self, quat):
+        gripper = self.sim.data.qpos[7:9]
+        for _ in range(200):
+            self.reset_mocap2body_xpos(self.sim)
+            quat_delta = quat - self.sim.data.mocap_quat[0]
+            self._set_action(
+                np.array(
+                    [
+                        0.0,
+                        0.0,
+                        0.0,
+                        quat_delta[0],
+                        quat_delta[1],
+                        quat_delta[2],
+                        quat_delta[3],
+                        gripper[0],
+                        gripper[1],
+                    ]
+                )
+            )
+            self.sim.step()
 
     def step(self, a, b=None):
         a = np.clip(a, -1.0, 1.0)
@@ -246,18 +302,18 @@ class KitchenV0(robot_env.RobotEnv):
             a = self.act_mid + a * self.act_amp  # mean center and scale
         else:
             self.goal = self._get_task_goal()  # update goal if init
-            self.controller = EndEffectorImpedanceController(
-                self.sim,
-                eef_name="panda0_link7",
-                joint_indexes={
-                    "joints": list(range(9)),
-                    "qpos": list(range(9)),
-                    "qvel": list(range(9)),
-                },
-                control_ori=False,
-                policy_freq=self.skip,
-                control_delta=True,
-            )
+            # self.controller = EndEffectorImpedanceController(
+            #     self.sim,
+            #     eef_name="panda0_link7",
+            #     joint_indexes={
+            #         "joints": list(range(9)),
+            #         "qpos": list(range(9)),
+            #         "qvel": list(range(9)),
+            #     },
+            #     control_ori=False,
+            #     policy_freq=self.skip,
+            #     control_delta=True,
+            # )
             # self.controller = EndEffectorInverseKinematicsController(
             #     self.sim,
             #     eef_name="panda0_link7",
@@ -287,11 +343,11 @@ class KitchenV0(robot_env.RobotEnv):
         # self.grasp()
         # print(self.get_endeff_pos())
 
-        # print(self.get_endeff_pos())
-        # observations
-        a = np.array([0, 1, 0, 0]).astype(float)
-        self._set_action(a)
-        self.sim.step()
+        # a = np.array([0, 0, 0, 0.04]).astype(float)
+        # self._set_action(a)
+        # self.sim.step()
+        print(self.sim.data.qpos[7:9])
+        print()
         obs = self._get_obs()
 
         # rewards
