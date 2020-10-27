@@ -38,14 +38,17 @@
               texturedir="../../../adept_models/kitchen"/>
 
     <equality>
-        <weld body1="vive_controller" body2="world" solref="0.02 1" solimp=".7 .95 0.050"/>
+        <weld body1="mocap" body2="panda0_link7" solimp="0.9 0.95 0.001" solref="0.02 1"></weld>
     </equality>
 
     <worldbody>
 
         <!-- Mocap -->
-        <body name="vive_controller" mocap="true" pos="-0.440 -0.092 2.026" euler="-1.57 0 -.785">
-            <geom type="box" group="2" pos='0 0 .142' size="0.02 0.10 0.03" contype="0" conaffinity="0" rgba=".9 .7 .95 0" euler="0 0 -.785"/>
+        <body mocap="true" name="mocap" pos="0 0 0">
+            <geom conaffinity="0" contype="0" pos="0 0 0" rgba="0 0.5 0 0.7" size="0.005 0.005 0.005" type="box"></geom>
+            <geom conaffinity="0" contype="0" pos="0 0 0" rgba="0 0.5 0 0.1" size="1 0.005 0.005" type="box"></geom>
+            <geom conaffinity="0" contype="0" pos="0 0 0" rgba="0 0.5 0 0.1" size="0.005 1 0.001" type="box"></geom>
+            <geom conaffinity="0" contype="0" pos="0 0 0" rgba="0 0.5 0 0.1" size="0.005 0.005 1" type="box"></geom>
         </body>
 
         <site name='target' pos='0 0 0' size='0.1' rgba='0 2 0 .2'/>
