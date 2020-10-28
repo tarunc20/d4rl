@@ -219,7 +219,7 @@ class KitchenV0(robot_env.RobotEnv):
 
     def goto_pose(self, pose):
         gripper = self.sim.data.qpos[7:9]
-        for _ in range(200):
+        for _ in range(300):
             self.reset_mocap2body_xpos(self.sim)
             delta = pose - self.get_ee_pose()
             self._set_action(
@@ -247,12 +247,31 @@ class KitchenV0(robot_env.RobotEnv):
         q = quaternion.quaternion(q[0], q[1], q[2], q[3])
         return quaternion.as_euler_angles(q)
 
+    def convert_xyzw_to_wxyz(self, q):
+        return np.array([q[3], q[0], q[1], q[2]])
+
+    def rotate_x_z(self, deg):
+        import ipdb
+
+        ipdb.set_trace()
+        qpos = self.data.qpos[:9].copy()
+        total_qpos = self.data.qpos.copy()
+        for i in range(self.skip):
+            self.sim.data.ctrl[:9] = qpos
+            self.data.ctrl[:9] = qpos
+            print((self.data.ctrl - qpos).mean())
+            print((self.sim.data.ctrl - qpos).mean())
+            self.sim.step()
+            print((self.data.ctrl - self.data.qpos[:9].copy()).mean())
+            print((self.sim.data.ctrl - self.data.qpos[:9].copy()).mean())
+
     def rotate_ee(self, rpy):
         gripper = self.sim.data.qpos[7:9]
         for _ in range(200):
             quat = self.rpy_to_quat(rpy)
-            self.reset_mocap2body_xpos(self.sim)
-            quat_delta = quat - self.sim.data.mocap_quat
+            quat_delta = (
+                self.convert_xyzw_to_wxyz(quat) - self.sim.data.body_xquat[10]
+            ) * 0.01
             self._set_action(
                 np.array(
                     [
@@ -268,14 +287,13 @@ class KitchenV0(robot_env.RobotEnv):
                     ]
                 )
             )
-            print(quat_delta)
             self.sim.step()
 
     def rotate_quat_ee(self, quat):
         gripper = self.sim.data.qpos[7:9]
         for _ in range(200):
             self.reset_mocap2body_xpos(self.sim)
-            quat_delta = quat - self.sim.data.mocap_quat[0]
+            quat_delta = quat - self.sim.data.body_xquat[10]
             self._set_action(
                 np.array(
                     [
@@ -346,8 +364,6 @@ class KitchenV0(robot_env.RobotEnv):
         # a = np.array([0, 0, 0, 0.04]).astype(float)
         # self._set_action(a)
         # self.sim.step()
-        print(self.sim.data.qpos[7:9])
-        print()
         obs = self._get_obs()
 
         # rewards
