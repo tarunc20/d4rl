@@ -58,7 +58,24 @@ class KitchenV0(robot_env.RobotEnv):
             move_right=self.move_right,
             move_forward=self.move_forward,
             move_backward=self.move_backward,
+            open_gripper=self.open_gripper,
+            close_gripper=self.close_gripper,
         )
+        self.primitive_name_to_action_idx = dict(
+            goto_pose=[0, 1, 2],
+            angled_x_y_grasp=[3, 4, 5],
+            move_delta_ee_pose=[6, 7, 8],
+            rotate_about_y_axis=9,
+            lift=10,
+            drop=11,
+            move_left=12,
+            move_right=13,
+            move_forward=14,
+            move_backward=15,
+            open_gripper=0,  # doesn't matter
+            close_gripper=0,  # doesn't matter
+        )
+        self.max_arg_len = 16
         super().__init__(
             self.MODEl,
             robot=self.make_robot(
@@ -200,12 +217,12 @@ class KitchenV0(robot_env.RobotEnv):
         self.ctrl_set_action(self.sim, action)
         self.mocap_set_action(self.sim, action)
 
-    def close_gripper(self):
+    def close_gripper(self, unusued=None):
         for _ in range(200):
             self._set_action(np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]))
             self.sim.step()
 
-    def open_gripper(self):
+    def open_gripper(self, unusued=None):
         for _ in range(200):
             self._set_action(np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.04, 0.04]))
             self.sim.step()
@@ -312,18 +329,10 @@ class KitchenV0(robot_env.RobotEnv):
         self.goto_pose(self.get_ee_pose() + np.array([0.0, -y_dist, 0.0]))
 
     def break_apart_action(self, a):
-        return dict(
-            goto_pose=a[:3],
-            angled_x_y_grasp=a[3:6],
-            move_delta_ee_pose=a[6:9],
-            rotate_about_y_axis=a[9],
-            lift=a[10],
-            drop=a[11],
-            move_left=a[12],
-            move_right=a[13],
-            move_forward=a[14],
-            move_backward=a[15],
-        )
+        broken_a = {}
+        for k, v in self.primitive_name_to_action_idx.items():
+            broken_a[k] = a[v]
+        return broken_a
 
     def act(self, a):
         primitive_name_to_action_dict = self.break_apart_action(a)

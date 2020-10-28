@@ -6,6 +6,8 @@ from d4rl.kitchen.adept_envs.franka.kitchen_multitask_v0 import KitchenTaskRelax
 
 from d4rl.offline_env import OfflineEnv
 
+from gym.spaces.box import Box
+
 OBS_ELEMENT_INDICES = {
     "bottom burner": np.array([11, 12]),
     "top burner": np.array([15, 16]),
@@ -127,20 +129,111 @@ class KitchenMicrowaveKettleBottomBurnerLightV0(KitchenBase):
 class KitchenMicrowaveV0(KitchenBase):
     TASK_ELEMENTS = ["microwave"]
 
-    def __init__(self, **kwargs):
+    def __init__(self, delta=0, **kwargs):
         super().__init__(self, max_steps=3, **kwargs)
         self.step_to_primitive_name = {
             0: "drop",
             1: "angled_x_y_grasp",
             2: "move_backward",
         }
+        action_low = np.array(
+            [
+                0.0,
+                0.0,
+                0.0,
+                -np.pi / 6 - delta,
+                -0.25 - delta,
+                0.9 - delta,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0.5 - delta,
+                0,
+                0,
+                0,
+                0.6 - delta,
+            ]
+        )
+
+        action_high = np.array(
+            [
+                0.0,
+                0.0,
+                0.0,
+                -np.pi / 6 + delta,
+                -0.25 + delta,
+                0.9 + delta,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0.5 + delta,
+                0,
+                0,
+                0,
+                0.6 + delta,
+            ]
+        )
+        self.action_space = Box(action_low, action_high)
 
 
 class KitchenKettleV0(KitchenBase):
     TASK_ELEMENTS = ["kettle"]
 
-    def __init__(self, **kwargs):
+    def __init__(self, delta=0, **kwargs):
         super().__init__(self, max_steps=5, **kwargs)
+        self.step_to_primitive_name = {
+            0: "drop",
+            1: "angled_x_y_grasp",
+            2: "move_delta_ee_pose",
+            3: "drop",
+            4: "open_gripper",
+        }
+        action_low = np.array(
+            [
+                0.0,
+                0.0,
+                0.0,
+                0,
+                0.2 - delta,
+                0.65 - delta,
+                0.25 - delta,
+                1.1 - delta,
+                0.25 - delta,
+                0,
+                0,
+                0.25 - delta,
+                0,
+                0,
+                0,
+                0.0,
+            ]
+        )
+
+        action_high = np.array(
+            [
+                0.0,
+                0.0,
+                0.0,
+                0,
+                0.2 + delta,
+                0.65 + delta,
+                0.25 + delta,
+                1.1 + delta,
+                0.25 + delta,
+                0,
+                0,
+                0.5 + delta,
+                0,
+                0,
+                0,
+                0.0,
+            ]
+        )
+        self.action_space = Box(action_low, action_high)
 
 
 class KitchenBottomBurnerV0(KitchenBase):
@@ -153,26 +246,221 @@ class KitchenBottomBurnerV0(KitchenBase):
 class KitchenTopBurnerV0(KitchenBase):
     TASK_ELEMENTS = ["top burner"]
 
-    def __init__(self, **kwargs):
+    def __init__(self, delta=0, **kwargs):
         super().__init__(self, max_steps=3, **kwargs)
+
+        self.step_to_primitive_name = {
+            0: "lift",
+            1: "angled_x_y_grasp",
+            2: "rotate_about_y_axis",
+        }
+        action_low = np.array(
+            [
+                0.0,
+                0.0,
+                0.0,
+                0,
+                0.5 - delta,
+                1.1 - delta,
+                0.0,
+                0.0,
+                0.0,
+                -np.pi / 4 - delta,
+                0.55 - delta,
+                0.0,
+                0,
+                0,
+                0,
+                0.0,
+            ]
+        )
+
+        action_high = np.array(
+            [
+                0.0,
+                0.0,
+                0.0,
+                0,
+                0.5 + delta,
+                1.1 + delta,
+                0.0,
+                0.0,
+                0.0,
+                -np.pi / 4 + delta,
+                0.55 + delta,
+                0.0,
+                0,
+                0,
+                0,
+                0.0,
+            ]
+        )
+        self.action_space = Box(action_low, action_high)
 
 
 class KitchenSlideCabinetV0(KitchenBase):
     TASK_ELEMENTS = ["slide cabinet"]
 
-    def __init__(self, **kwargs):
+    def __init__(self, delta=0, **kwargs):
         super().__init__(self, max_steps=3, **kwargs)
+        self.step_to_primitive_name = {
+            0: "lift",
+            1: "angled_x_y_grasp",
+            2: "move_right",
+        }
+        action_low = np.array(
+            [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.7 - delta,
+                1.0 - delta,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1 - delta,
+                0.0,
+                0.0,
+                0.6 - delta,
+                0.0,
+                0.0,
+            ]
+        )
+
+        action_high = np.array(
+            [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.7 + delta,
+                1.0 + delta,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1 + delta,
+                0.0,
+                0.0,
+                0.6 + delta,
+                0.0,
+                0.0,
+            ]
+        )
+        self.action_space = Box(action_low, action_high)
 
 
 class KitchenHingeCabinetV0(KitchenBase):
     TASK_ELEMENTS = ["hinge cabinet"]
 
-    def __init__(self, **kwargs):
+    def __init__(self, delta=0, **kwargs):
         super().__init__(self, max_steps=6, **kwargs)
+
+        self.step_to_primitive_name = {
+            0: "lift",
+            1: "angled_x_y_grasp",
+            2: "move_delta_ee_pose",
+            3: "move_backward",
+            4: "angled_x_y_grasp",
+            5: "move_right",
+        }
+        action_low = np.array(
+            [
+                0.0,
+                0.0,
+                0.0,
+                -np.pi / 6 - delta,
+                -0.35 - delta,
+                0.1 - delta,
+                0.5 - delta,
+                -0.5 - delta,
+                0.0,
+                0.0,
+                1 - delta,
+                0.0,
+                0,
+                1 - delta,
+                0,
+                0.25 - delta,
+            ]
+        )
+
+        action_high = np.array(
+            [
+                0.0,
+                0.0,
+                0.0,
+                np.pi / 6 + delta,
+                -0.35 + delta,
+                1.4 + delta,
+                0.5 + delta,
+                -0.5 + delta,
+                0.0,
+                0.0,
+                1 + delta,
+                0.0,
+                0,
+                1 + delta,
+                0,
+                0.25 + delta,
+            ]
+        )
+        self.action_space = Box(action_low, action_high)
 
 
 class KitchenLightSwitchV0(KitchenBase):
     TASK_ELEMENTS = ["light switch"]
 
-    def __init__(self, **kwargs):
+    def __init__(self, delta=0, **kwargs):
         super().__init__(self, max_steps=5, **kwargs)
+        self.step_to_primitive_name = {
+            0: "close_gripper",
+            1: "lift",
+            2: "move_right",
+            3: "move_forward",
+            4: "move_left",
+        }
+        action_low = np.array(
+            [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.45 - delta,
+                0.0,
+                0.45 - delta,
+                0.45 - delta,
+                1.25 - delta,
+                0.0,
+            ]
+        )
+
+        action_high = np.array(
+            [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.45 + delta,
+                0.0,
+                0.45 + delta,
+                0.45 + delta,
+                1.25 + delta,
+                0.0,
+            ]
+        )
+        self.action_space = Box(action_low, action_high)
