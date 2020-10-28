@@ -82,7 +82,7 @@ class KitchenBase(KitchenTaskRelaxV1, OfflineEnv):
             distance = np.linalg.norm(
                 next_obj_obs[..., element_idx - idx_offset] - next_goal[element_idx]
             )
-            dense += distance
+            dense += -1 * distance  # reward must be negative distance for RL
             complete = distance < BONUS_THRESH
             if complete:
                 completions.append(element)
@@ -115,6 +115,7 @@ class KitchenBase(KitchenTaskRelaxV1, OfflineEnv):
             )
             info[element + " distance to goal"] = distance
             info[element + " success"] = float(distance < BONUS_THRESH)
+            info["success"] = float(distance < BONUS_THRESH)
         return info
 
 
