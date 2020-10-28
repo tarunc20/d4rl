@@ -114,7 +114,7 @@ class KitchenBase(KitchenTaskRelaxV1, OfflineEnv):
                 next_obj_obs[..., element_idx - idx_offset] - next_goal[element_idx]
             )
             info[element + " distance to goal"] = distance
-            info[element + " success"] = distance < BONUS_THRESH
+            info[element + " success"] = float(distance < BONUS_THRESH)
         return info
 
 
