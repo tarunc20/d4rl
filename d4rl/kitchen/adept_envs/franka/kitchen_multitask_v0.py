@@ -25,11 +25,6 @@ from gym import spaces
 from dm_control.mujoco import engine
 import quaternion
 
-from robosuite.controllers import (
-    EndEffectorImpedanceController,
-    EndEffectorInverseKinematicsController,
-)
-
 
 @configurable(pickleable=True)
 class KitchenV0(robot_env.RobotEnv):
@@ -45,11 +40,13 @@ class KitchenV0(robot_env.RobotEnv):
     N_DOF_ROBOT = 9
     N_DOF_OBJECT = 21
 
-    def __init__(self, robot_params={}, frame_skip=40):
+    def __init__(self, robot_params={}, max_steps=1, frame_skip=40):
         self.goal_concat = True
         self.obs_dict = {}
         self.robot_noise_ratio = 0.1  # 10% as per robot_config specs
         self.goal = np.zeros((30,))
+        self.max_steps = max_steps
+        self.step_count = 0
         super().__init__(
             self.MODEl,
             robot=self.make_robot(
@@ -259,23 +256,64 @@ class KitchenV0(robot_env.RobotEnv):
             )
             self.sim.step()
 
+    def angled_x_y_grasp(self, angle, x_dist, y_dist):
+        rotation = self.quat_to_rpy(self.sim.data.body_xquat[10]) - np.array(
+            [angle, 0, 0]
+        )
+        self.rotate_ee(rotation)
+        self.goto_pose(self.get_ee_pose() + np.array([x_dist, 0.0, 0]))
+        self.goto_pose(self.get_ee_pose() + np.array([0.0, y_dist, 0]))
+        self.close_gripper()
+
+    def lift(self, z_dist):
+        assert z_dist >= 0
+        self.goto_pose(self.get_ee_pose() + np.array([0.0, 0.0, z_dist]))
+
+    def drop(self, z_dist):
+        assert z_dist >= 0
+        self.goto_pose(self.get_ee_pose() + np.array([0.0, 0.0, -z_dist]))
+
+    def move_left(self, x_dist):
+        assert x_dist >= 0.0
+        self.goto_pose(self.get_ee_pose() + np.array([-x_dist, 0.0, 0.0]))
+
+    def move_right(self, x_dist):
+        assert x_dist >= 0.0
+        self.goto_pose(self.get_ee_pose() + np.array([x_dist, 0.0, 0.0]))
+
+    def move_forward(self, y_dist):
+        assert y_dist >= 0.0
+        self.goto_pose(self.get_ee_pose() + np.array([0.0, y_dist, 0.0]))
+
+    def move_backward(self, y_dist):
+        assert y_dist >= 0.0
+        self.goto_pose(self.get_ee_pose() + np.array([0.0, -y_dist, 0.0]))
+
+    def move_delta_ee_pose(self, pose):
+        self.goto_pose(self.get_ee_pose() + pose)
+
+    def rotate_about_y_axis(self, angle):
+        rotation = self.quat_to_rpy(self.sim.data.body_xquat[10]) - np.array(
+            [0, 0, angle]
+        )
+        self.rotate_ee(rotation)
+
+    def act(self, a):
+        pass
+
     def step(self, a, b=None):
-        a = np.clip(a, -1.0, 1.0)
+        if self.action_space:
+            a = np.clip(a, self.action_space.low, self.action_space.high)
 
-        if not self.initializing:
-            a = self.act_mid + a * self.act_amp  # mean center and scale
-        else:
-            self.goal = self._get_task_goal()  # update goal if init
-
-        # TODO: setup primitive choice and run
-
+        self.act(a)
         obs = self._get_obs()
 
         # rewards
         reward_dict, score = self._get_reward_n_score(self.obs_dict)
 
         # termination
-        done = False
+        self.step_count += 1
+        done = self.step_count == self.max_steps
 
         # finalize step
         env_info = {
@@ -307,6 +345,7 @@ class KitchenV0(robot_env.RobotEnv):
         self.robot.reset(self, reset_pos, reset_vel)
         self.sim.forward()
         self.goal = self._get_task_goal()  # sample a new goal on reset
+        self.step_count = 0
         return self._get_obs()
 
     def evaluate_success(self, paths):
@@ -351,8 +390,8 @@ class KitchenV0(robot_env.RobotEnv):
 class KitchenTaskRelaxV1(KitchenV0):
     """Kitchen environment with proper camera and goal setup"""
 
-    def __init__(self):
-        super(KitchenTaskRelaxV1, self).__init__()
+    def __init__(self, **kwargs):
+        super(KitchenTaskRelaxV1, self).__init__(**kwargs)
 
     def _get_reward_n_score(self, obs_dict):
         reward_dict = {}

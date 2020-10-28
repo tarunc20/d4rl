@@ -32,8 +32,8 @@ class KitchenBase(KitchenTaskRelaxV1, OfflineEnv):
     # A string of element names. The robot's task is then to modify each of
     # these elements appropriately.
     TASK_ELEMENTS = []
-    REMOVE_TASKS_WHEN_COMPLETE = True
-    TERMINATE_ON_TASK_COMPLETE = True
+    REMOVE_TASKS_WHEN_COMPLETE = False
+    TERMINATE_ON_TASK_COMPLETE = False
 
     def __init__(
         self,
@@ -127,26 +127,47 @@ class KitchenMicrowaveKettleBottomBurnerLightV0(KitchenBase):
 class KitchenMicrowaveV0(KitchenBase):
     TASK_ELEMENTS = ["microwave"]
 
+    def __init__(self, **kwargs):
+        super().__init__(self, max_steps=4, **kwargs)
+
 
 class KitchenKettleV0(KitchenBase):
     TASK_ELEMENTS = ["kettle"]
+
+    def __init__(self, **kwargs):
+        super().__init__(self, max_steps=5, **kwargs)
 
 
 class KitchenBottomBurnerV0(KitchenBase):
     TASK_ELEMENTS = ["bottom burner"]
 
+    def __init__(self, **kwargs):
+        super().__init__(self, max_steps=3, **kwargs)
+
 
 class KitchenTopBurnerV0(KitchenBase):
     TASK_ELEMENTS = ["top burner"]
+
+    def __init__(self, **kwargs):
+        super().__init__(self, max_steps=3, **kwargs)
 
 
 class KitchenSlideCabinetV0(KitchenBase):
     TASK_ELEMENTS = ["slide cabinet"]
 
+    def __init__(self, **kwargs):
+        super().__init__(self, max_steps=3, **kwargs)
+
 
 class KitchenHingeCabinetV0(KitchenBase):
     TASK_ELEMENTS = ["hinge cabinet"]
 
+    def __init__(self, **kwargs):
+        super().__init__(self, max_steps=6, **kwargs)
+
 
 class KitchenLightSwitchV0(KitchenBase):
     TASK_ELEMENTS = ["light switch"]
+
+    def __init__(self, **kwargs):
+        super().__init__(self, max_steps=5, **kwargs)
