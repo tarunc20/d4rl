@@ -123,19 +123,14 @@ class KitchenV0(robot_env.RobotEnv):
         obs_lower = -obs_upper
         self.observation_space = spaces.Box(obs_lower, obs_upper)
 
+    def _get_reward_n_score(self, obs_dict):
+        raise NotImplementedError()
+
     def ctrl_set_action(self, sim, action):
         self.data.ctrl[7] = action[-2]
         self.data.ctrl[8] = action[-1]
 
     def mocap_set_action(self, sim, action):
-        """The action controls the robot using mocaps. Specifically, bodies
-        on the robot (for example the gripper wrist) is controlled with
-        mocap bodies. In this case the action is the desired difference
-        in position and orientation (quaternion), in world coordinates,
-        of the of the target body. The mocap is positioned relative to
-        the target body according to the delta, and the MuJoCo equality
-        constraint optimizer tries to center the welded body on the mocap.
-        """
         if sim.model.nmocap > 0:
             action, _ = np.split(action, (sim.model.nmocap * 7,))
             action = action.reshape(sim.model.nmocap, 7)
@@ -147,7 +142,6 @@ class KitchenV0(robot_env.RobotEnv):
             sim.data.mocap_quat[:] = sim.data.mocap_quat + quat_delta
 
     def reset_mocap_welds(self, sim):
-        """Resets the mocap welds that we use for actuation."""
         if sim.model.nmocap > 0 and sim.model.eq_data is not None:
             for i in range(sim.model.eq_data.shape[0]):
                 if sim.model.eq_type[i] == mujoco_py.const.EQ_WELD:
@@ -157,10 +151,6 @@ class KitchenV0(robot_env.RobotEnv):
         sim.forward()
 
     def reset_mocap2body_xpos(self, sim):
-        """Resets the position and orientation of the mocap bodies to the same
-        values as the bodies they're welded to.
-        """
-
         if (
             sim.model.eq_type is None
             or sim.model.eq_obj1id is None
@@ -200,9 +190,6 @@ class KitchenV0(robot_env.RobotEnv):
         # Apply action to simulation.
         self.ctrl_set_action(self.sim, action)
         self.mocap_set_action(self.sim, action)
-
-    def _get_reward_n_score(self, obs_dict):
-        raise NotImplementedError()
 
     def close_gripper(self):
         for _ in range(200):
@@ -250,50 +237,11 @@ class KitchenV0(robot_env.RobotEnv):
     def convert_xyzw_to_wxyz(self, q):
         return np.array([q[3], q[0], q[1], q[2]])
 
-    def rotate_x_z(self, deg):
-        import ipdb
-
-        ipdb.set_trace()
-        qpos = self.data.qpos[:9].copy()
-        total_qpos = self.data.qpos.copy()
-        for i in range(self.skip):
-            self.sim.data.ctrl[:9] = qpos
-            self.data.ctrl[:9] = qpos
-            print((self.data.ctrl - qpos).mean())
-            print((self.sim.data.ctrl - qpos).mean())
-            self.sim.step()
-            print((self.data.ctrl - self.data.qpos[:9].copy()).mean())
-            print((self.sim.data.ctrl - self.data.qpos[:9].copy()).mean())
-
     def rotate_ee(self, rpy):
         gripper = self.sim.data.qpos[7:9]
         for _ in range(200):
             quat = self.rpy_to_quat(rpy)
-            quat_delta = (
-                self.convert_xyzw_to_wxyz(quat) - self.sim.data.body_xquat[10]
-            ) * 0.01
-            self._set_action(
-                np.array(
-                    [
-                        0.0,
-                        0.0,
-                        0.0,
-                        quat_delta[0],
-                        quat_delta[1],
-                        quat_delta[2],
-                        quat_delta[3],
-                        gripper[0],
-                        gripper[1],
-                    ]
-                )
-            )
-            self.sim.step()
-
-    def rotate_quat_ee(self, quat):
-        gripper = self.sim.data.qpos[7:9]
-        for _ in range(200):
-            self.reset_mocap2body_xpos(self.sim)
-            quat_delta = quat - self.sim.data.body_xquat[10]
+            quat_delta = self.convert_xyzw_to_wxyz(quat) - self.sim.data.body_xquat[10]
             self._set_action(
                 np.array(
                     [
@@ -314,56 +262,13 @@ class KitchenV0(robot_env.RobotEnv):
     def step(self, a, b=None):
         a = np.clip(a, -1.0, 1.0)
 
-        # action = np.clip(a, self.action_space.low, self.action_space.high)
-
         if not self.initializing:
             a = self.act_mid + a * self.act_amp  # mean center and scale
         else:
             self.goal = self._get_task_goal()  # update goal if init
-            # self.controller = EndEffectorImpedanceController(
-            #     self.sim,
-            #     eef_name="panda0_link7",
-            #     joint_indexes={
-            #         "joints": list(range(9)),
-            #         "qpos": list(range(9)),
-            #         "qvel": list(range(9)),
-            #     },
-            #     control_ori=False,
-            #     policy_freq=self.skip,
-            #     control_delta=True,
-            # )
-            # self.controller = EndEffectorInverseKinematicsController(
-            #     self.sim,
-            #     eef_name="panda0_link7",
-            #     robot_name="panda",
-            #     actuator_range=self.sim.model.actuator_ctrlrange,
-            #     joint_indexes={
-            #         "joints": list(range(9)),
-            #         "qpos": list(range(9)),
-            #         "qvel": list(range(9)),
-            #     },
-            #     ik_ori_limit=1,
-            #     ik_pos_limit=1,
-            # )
-        # a[:3] = [0, 0, 0.0]
-        # a[3:7] = [0, 0, 0, 0]
-        # self.controller.set_goal(a[:3])
-        # for i in range(self.skip):
-        #     a = self.controller.run_controller()
-        #     self.do_simulation(a, 1)
-        #
-        # for i in range(self.skip):
-        #     self.robot.step(self, self.controller, a, step_duration=1)
-        # self.sim.data.qpos[7] -= 0.001
-        # self.sim.data.qpos[6] -= 1
-        # self.sim.data.qpos[5] -= 1
-        # self.sim.step()
-        # self.grasp()
-        # print(self.get_endeff_pos())
 
-        # a = np.array([0, 0, 0, 0.04]).astype(float)
-        # self._set_action(a)
-        # self.sim.step()
+        # TODO: setup primitive choice and run
+
         obs = self._get_obs()
 
         # rewards
