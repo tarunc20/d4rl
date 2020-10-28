@@ -128,7 +128,12 @@ class KitchenMicrowaveV0(KitchenBase):
     TASK_ELEMENTS = ["microwave"]
 
     def __init__(self, **kwargs):
-        super().__init__(self, max_steps=4, **kwargs)
+        super().__init__(self, max_steps=3, **kwargs)
+        self.step_to_primitive_name = {
+            0: "drop",
+            1: "angled_x_y_grasp",
+            2: "move_backward",
+        }
 
 
 class KitchenKettleV0(KitchenBase):

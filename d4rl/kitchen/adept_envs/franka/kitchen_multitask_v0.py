@@ -47,6 +47,18 @@ class KitchenV0(robot_env.RobotEnv):
         self.goal = np.zeros((30,))
         self.max_steps = max_steps
         self.step_count = 0
+        self.primitive_name_to_func = dict(
+            goto_pose=self.goto_pose,
+            angled_x_y_grasp=self.angled_x_y_grasp,
+            move_delta_ee_pose=self.move_delta_ee_pose,
+            rotate_about_y_axis=self.rotate_about_y_axis,
+            lift=self.lift,
+            drop=self.drop,
+            move_left=self.move_left,
+            move_right=self.move_right,
+            move_forward=self.move_forward,
+            move_backward=self.move_backward,
+        )
         super().__init__(
             self.MODEl,
             robot=self.make_robot(
@@ -201,28 +213,6 @@ class KitchenV0(robot_env.RobotEnv):
     def get_ee_pose(self):
         return self.sim.data.get_site_xpos("end_effector")
 
-    def goto_pose(self, pose):
-        gripper = self.sim.data.qpos[7:9]
-        for _ in range(300):
-            self.reset_mocap2body_xpos(self.sim)
-            delta = pose - self.get_ee_pose()
-            self._set_action(
-                np.array(
-                    [
-                        delta[0],
-                        delta[1],
-                        delta[2],
-                        0.0,
-                        0.0,
-                        0.0,
-                        0.0,
-                        gripper[0],
-                        gripper[1],
-                    ]
-                )
-            )
-            self.sim.step()
-
     def rpy_to_quat(self, rpy):
         q = quaternion.from_euler_angles(rpy)
         return np.array([q.x, q.y, q.z, q.w])
@@ -256,7 +246,30 @@ class KitchenV0(robot_env.RobotEnv):
             )
             self.sim.step()
 
-    def angled_x_y_grasp(self, angle, x_dist, y_dist):
+    def goto_pose(self, pose):
+        gripper = self.sim.data.qpos[7:9]
+        for _ in range(300):
+            self.reset_mocap2body_xpos(self.sim)
+            delta = pose - self.get_ee_pose()
+            self._set_action(
+                np.array(
+                    [
+                        delta[0],
+                        delta[1],
+                        delta[2],
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        gripper[0],
+                        gripper[1],
+                    ]
+                )
+            )
+            self.sim.step()
+
+    def angled_x_y_grasp(self, angle_and_xy):
+        angle, x_dist, y_dist = angle_and_xy
         rotation = self.quat_to_rpy(self.sim.data.body_xquat[10]) - np.array(
             [angle, 0, 0]
         )
@@ -264,6 +277,15 @@ class KitchenV0(robot_env.RobotEnv):
         self.goto_pose(self.get_ee_pose() + np.array([x_dist, 0.0, 0]))
         self.goto_pose(self.get_ee_pose() + np.array([0.0, y_dist, 0]))
         self.close_gripper()
+
+    def move_delta_ee_pose(self, pose):
+        self.goto_pose(self.get_ee_pose() + pose)
+
+    def rotate_about_y_axis(self, angle):
+        rotation = self.quat_to_rpy(self.sim.data.body_xquat[10]) - np.array(
+            [0, 0, angle]
+        )
+        self.rotate_ee(rotation)
 
     def lift(self, z_dist):
         assert z_dist >= 0
@@ -289,23 +311,33 @@ class KitchenV0(robot_env.RobotEnv):
         assert y_dist >= 0.0
         self.goto_pose(self.get_ee_pose() + np.array([0.0, -y_dist, 0.0]))
 
-    def move_delta_ee_pose(self, pose):
-        self.goto_pose(self.get_ee_pose() + pose)
-
-    def rotate_about_y_axis(self, angle):
-        rotation = self.quat_to_rpy(self.sim.data.body_xquat[10]) - np.array(
-            [0, 0, angle]
+    def break_apart_action(self, a):
+        return dict(
+            goto_pose=a[:3],
+            angled_x_y_grasp=a[3:6],
+            move_delta_ee_pose=a[6:9],
+            rotate_about_y_axis=a[9],
+            lift=a[10],
+            drop=a[11],
+            move_left=a[12],
+            move_right=a[13],
+            move_forward=a[14],
+            move_backward=a[15],
         )
-        self.rotate_ee(rotation)
 
     def act(self, a):
-        pass
+        primitive_name_to_action_dict = self.break_apart_action(a)
+        primitive_name = self.step_to_primitive_name[self.step_count]
+        primitive_action = primitive_name_to_action_dict[primitive_name]
+        primitive = self.primitive_name_to_func[primitive_name]
+        primitive(primitive_action)
 
     def step(self, a, b=None):
-        if self.action_space:
+        if not self.initializing:
             a = np.clip(a, self.action_space.low, self.action_space.high)
 
-        self.act(a)
+        if not self.initializing:
+            self.act(a)
         obs = self._get_obs()
 
         # rewards
