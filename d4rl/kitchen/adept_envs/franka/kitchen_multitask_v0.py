@@ -40,7 +40,15 @@ class KitchenV0(robot_env.RobotEnv):
     N_DOF_ROBOT = 9
     N_DOF_OBJECT = 21
 
-    def __init__(self, robot_params={}, max_steps=1, frame_skip=40):
+    def __init__(
+        self,
+        robot_params={},
+        max_steps=1,
+        frame_skip=40,
+        image_obs=False,
+        imwidth=64,
+        imheight=64,
+    ):
         self.goal_concat = True
         self.obs_dict = {}
         self.robot_noise_ratio = 0.1  # 10% as per robot_config specs
@@ -76,6 +84,9 @@ class KitchenV0(robot_env.RobotEnv):
             close_gripper=0,  # doesn't matter
         )
         self.max_arg_len = 16
+        self.image_obs = image_obs
+        self.imwidth = imwidth
+        self.imheight = imheight
         super().__init__(
             self.MODEl,
             robot=self.make_robot(
@@ -148,6 +159,12 @@ class KitchenV0(robot_env.RobotEnv):
         obs_upper = 8.0 * np.ones(self.obs_dim)
         obs_lower = -obs_upper
         self.observation_space = spaces.Box(obs_lower, obs_upper)
+        if self.image_obs:
+            self.imlength = imwidth * imheight
+            self.imlength *= 3
+            self.observation_space = spaces.Box(
+                0, 255, (self.imlength,), dtype=np.uint8
+            )
 
     def _get_reward_n_score(self, obs_dict):
         raise NotImplementedError()
@@ -375,6 +392,10 @@ class KitchenV0(robot_env.RobotEnv):
         self.obs_dict["obj_qp"] = obj_qp
         self.obs_dict["obj_qv"] = obj_qv
         self.obs_dict["goal"] = self.goal
+        if self.image_obs:
+            img = self.render(mode="rgb_array")
+            img = img.transpose(2, 0, 1).flatten()
+            return img
         if self.goal_concat:
             return np.concatenate(
                 [self.obs_dict["qp"], self.obs_dict["obj_qp"], self.obs_dict["goal"]]
@@ -449,7 +470,7 @@ class KitchenTaskRelaxV1(KitchenV0):
             #     distance=2.2, lookat=[-0.2, 0.5, 2.0], azimuth=70, elevation=-35
             # )
             # img = camera.render()
-            img = self.sim_robot.renderer.render_offscreen(1000, 1000)
+            img = self.sim_robot.renderer.render_offscreen(self.imwidth, self.imheight)
             return img
         else:
             super(KitchenTaskRelaxV1, self).render()
