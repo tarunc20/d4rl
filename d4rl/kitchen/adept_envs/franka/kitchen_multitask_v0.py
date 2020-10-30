@@ -463,14 +463,18 @@ class KitchenTaskRelaxV1(KitchenV0):
         score = 0.0
         return reward_dict, score
 
-    def render(self, mode="human"):
+    def render(self, mode="human", imwidth=None, imheight=None):
         if mode == "rgb_array":
             # camera = engine.MovableCamera(self.sim, 256, 256)
             # camera.set_pose(
             #     distance=2.2, lookat=[-0.2, 0.5, 2.0], azimuth=70, elevation=-35
             # )
             # img = camera.render()
-            img = self.sim_robot.renderer.render_offscreen(self.imwidth, self.imheight)
+            if not imwidth:
+                imwidth = self.imwidth
+            if not imheight:
+                imheight = self.imheight
+            img = self.sim_robot.renderer.render_offscreen(imwidth, imheight)
             return img
         else:
             super(KitchenTaskRelaxV1, self).render()
