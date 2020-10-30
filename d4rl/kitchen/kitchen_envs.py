@@ -96,8 +96,10 @@ class KitchenBase(KitchenTaskRelaxV1, OfflineEnv):
         score = bonus
         return reward_dict, score
 
-    def step(self, a, b=None):
-        obs, reward, done, env_info = super(KitchenBase, self).step(a, b=b)
+    def step(self, a, render_every_step=False):
+        obs, reward, done, env_info = super(KitchenBase, self).step(
+            a, render_every_step=render_every_step
+        )
         if self.TERMINATE_ON_TASK_COMPLETE:
             done = not self.tasks_to_complete
         self.update_info(env_info)
