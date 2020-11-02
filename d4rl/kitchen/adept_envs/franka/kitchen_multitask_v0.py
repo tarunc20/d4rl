@@ -452,7 +452,7 @@ class KitchenV0(robot_env.RobotEnv):
             a = np.clip(a, self.action_space.low, self.action_space.high)
 
         if not self.initializing:
-            if render_every_step:
+            if render_every_step and render_mode == "rgb_array":
                 self.img_array = []
             self.act(a, render_every_step=render_every_step, render_mode=render_mode)
         obs = self._get_obs()
@@ -568,6 +568,6 @@ class KitchenTaskRelaxV1(KitchenV0):
                 if not imheight:
                     imheight = self.imheight
                 img = self.sim_robot.renderer.render_offscreen(imwidth, imheight)
-                return img
+            return img
         else:
-            super(KitchenTaskRelaxV1, self).render()
+            super(KitchenTaskRelaxV1, self).render(mode=mode)
