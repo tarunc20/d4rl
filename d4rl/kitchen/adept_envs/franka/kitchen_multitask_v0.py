@@ -14,7 +14,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import copy
 import os
 
 import mujoco_py
@@ -49,7 +48,6 @@ class KitchenV0(robot_env.RobotEnv):
         imwidth=64,
         imheight=64,
     ):
-        self.goal_concat = True
         self.obs_dict = {}
         self.robot_noise_ratio = 0.1  # 10% as per robot_config specs
         self.goal = np.zeros((30,))
@@ -101,12 +99,10 @@ class KitchenV0(robot_env.RobotEnv):
         )
         self.reset_mocap_welds(self.sim)
         self.sim.forward()
-        gripper_target = np.array(
-            [-0.498, 0.005, -0.431 + 0.01]
-        ) + self.sim.data.get_site_xpos("end_effector")
+        gripper_target = np.array([-0.498, 0.005, -0.431 + 0.01]) + self.get_ee_pose()
         gripper_rotation = np.array([1.0, 0.0, 1.0, 0.0])
-        self.sim.data.set_mocap_pos("mocap", gripper_target)
-        self.sim.data.set_mocap_quat("mocap", gripper_rotation)
+        self.set_mocap_pos("mocap", gripper_target)
+        self.set_mocap_quat("mocap", gripper_rotation)
         for _ in range(10):
             self.sim.step()
 
@@ -149,11 +145,8 @@ class KitchenV0(robot_env.RobotEnv):
 
         self.init_qvel = self.sim.model.key_qvel[0].copy()
 
-        self.act_mid = np.zeros(self.N_DOF_ROBOT)
-        self.act_amp = 2.0 * np.ones(self.N_DOF_ROBOT)
-
-        act_lower = -1 * np.ones((self.N_DOF_ROBOT,))
-        act_upper = 1 * np.ones((self.N_DOF_ROBOT,))
+        act_lower = -1.5 * np.ones((16,))
+        act_upper = 1.5 * np.ones((16,))
         self.action_space = spaces.Box(act_lower, act_upper)
 
         obs_upper = 8.0 * np.ones(self.obs_dim)
@@ -165,6 +158,30 @@ class KitchenV0(robot_env.RobotEnv):
             self.observation_space = spaces.Box(
                 0, 255, (self.imlength,), dtype=np.uint8
             )
+
+    def get_site_xpos(self, name):
+        id = self.sim.model.site_name2id(name)
+        return self.sim.data.site_xpos[id]
+
+    def get_mocap_pos(self, name):
+        body_id = self.sim.model.body_name2id(name)
+        mocap_id = self.sim.model.body_mocapid[body_id]
+        return self.sim.data.mocap_pos[mocap_id]
+
+    def set_mocap_pos(self, name, value):
+        body_id = self.sim.model.body_name2id(name)
+        mocap_id = self.sim.model.body_mocapid[body_id]
+        self.sim.data.mocap_pos[mocap_id] = value
+
+    def get_mocap_quat(self, name):
+        body_id = self.sim.model.body_name2id(name)
+        mocap_id = self.sim.model.body_mocapid[body_id]
+        return self.sim.data.mocap_quat[mocap_id]
+
+    def set_mocap_quat(self, name, value):
+        body_id = self.sim.model.body_name2id(name)
+        mocap_id = self.sim.model.body_mocapid[body_id]
+        self.sim.data.mocap_quat[mocap_id] = value
 
     def _get_reward_n_score(self, obs_dict):
         raise NotImplementedError()
@@ -208,10 +225,8 @@ class KitchenV0(robot_env.RobotEnv):
 
             mocap_id = sim.model.body_mocapid[obj1_id]
             if mocap_id != -1:
-                # obj1 is the mocap, obj2 is the welded body
                 body_idx = obj2_id
             else:
-                # obj2 is the mocap, obj1 is the welded body
                 mocap_id = sim.model.body_mocapid[obj2_id]
                 body_idx = obj1_id
 
@@ -221,12 +236,10 @@ class KitchenV0(robot_env.RobotEnv):
 
     def _set_action(self, action):
         assert action.shape == (9,)
-        action = (
-            action.copy()
-        )  # ensure that we don't change the action outside of this scope
+        action = action.copy()
         pos_ctrl, rot_ctrl, gripper_ctrl = action[:3], action[3:7], action[7:9]
 
-        pos_ctrl *= 0.05  # limit maximum change in position
+        pos_ctrl *= 0.05
         assert gripper_ctrl.shape == (2,)
         action = np.concatenate([pos_ctrl, rot_ctrl, gripper_ctrl])
 
@@ -235,7 +248,7 @@ class KitchenV0(robot_env.RobotEnv):
         self.mocap_set_action(self.sim, action)
 
     def get_ee_pose(self):
-        return self.sim.data.get_site_xpos("end_effector")
+        return self.get_site_xpos("end_effector")
 
     def rpy_to_quat(self, rpy):
         q = quaternion.from_euler_angles(rpy)
@@ -248,21 +261,31 @@ class KitchenV0(robot_env.RobotEnv):
     def convert_xyzw_to_wxyz(self, q):
         return np.array([q[3], q[0], q[1], q[2]])
 
-    def close_gripper(self, unusued=None, render_every_step=False):
+    def close_gripper(
+        self, unusued=None, render_every_step=False, render_mode="rgb_array"
+    ):
         for _ in range(200):
             self._set_action(np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]))
             self.sim.step()
             if render_every_step:
-                self.img_array.append(self.render("rgb_array", 1000, 1000))
+                if render_mode == "rgb_array":
+                    self.img_array.append(self.render(render_mode, 1000, 1000))
+                else:
+                    self.render(render_mode, 1000, 1000)
 
-    def open_gripper(self, unusued=None, render_every_step=False):
+    def open_gripper(
+        self, unusued=None, render_every_step=False, render_mode="rgb_array"
+    ):
         for _ in range(200):
             self._set_action(np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.04, 0.04]))
             self.sim.step()
             if render_every_step:
-                self.img_array.append(self.render("rgb_array", 1000, 1000))
+                if render_mode == "rgb_array":
+                    self.img_array.append(self.render(render_mode, 1000, 1000))
+                else:
+                    self.render(render_mode, 1000, 1000)
 
-    def rotate_ee(self, rpy, render_every_step=False):
+    def rotate_ee(self, rpy, render_every_step=False, render_mode="rgb_array"):
         gripper = self.sim.data.qpos[7:9]
         for _ in range(200):
             quat = self.rpy_to_quat(rpy)
@@ -284,9 +307,12 @@ class KitchenV0(robot_env.RobotEnv):
             )
             self.sim.step()
             if render_every_step:
-                self.img_array.append(self.render("rgb_array", 1000, 1000))
+                if render_mode == "rgb_array":
+                    self.img_array.append(self.render(render_mode, 1000, 1000))
+                else:
+                    self.render(render_mode, 1000, 1000)
 
-    def goto_pose(self, pose, render_every_step=False):
+    def goto_pose(self, pose, render_every_step=False, render_mode="rgb_array"):
         gripper = self.sim.data.qpos[7:9]
         for _ in range(300):
             self.reset_mocap2body_xpos(self.sim)
@@ -308,73 +334,100 @@ class KitchenV0(robot_env.RobotEnv):
             )
             self.sim.step()
             if render_every_step:
-                self.img_array.append(self.render("rgb_array", 1000, 1000))
+                if render_mode == "rgb_array":
+                    self.img_array.append(self.render(render_mode, 1000, 1000))
+                else:
+                    self.render(render_mode, 1000, 1000)
 
-    def angled_x_y_grasp(self, angle_and_xy, render_every_step=False):
+    def angled_x_y_grasp(
+        self, angle_and_xy, render_every_step=False, render_mode="rgb_array"
+    ):
         angle, x_dist, y_dist = angle_and_xy
         rotation = self.quat_to_rpy(self.sim.data.body_xquat[10]) - np.array(
             [angle, 0, 0]
         )
-        self.rotate_ee(rotation, render_every_step=render_every_step)
+        self.rotate_ee(
+            rotation,
+            render_every_step=render_every_step,
+            render_mode=render_mode,
+        )
         self.goto_pose(
             self.get_ee_pose() + np.array([x_dist, 0.0, 0]),
             render_every_step=render_every_step,
+            render_mode=render_mode,
         )
         self.goto_pose(
             self.get_ee_pose() + np.array([0.0, y_dist, 0]),
             render_every_step=render_every_step,
+            render_mode=render_mode,
         )
-        self.close_gripper(render_every_step=render_every_step)
+        self.close_gripper(render_every_step=render_every_step, render_mode=render_mode)
 
-    def move_delta_ee_pose(self, pose, render_every_step=False):
-        self.goto_pose(self.get_ee_pose() + pose, render_every_step=render_every_step)
+    def move_delta_ee_pose(
+        self, pose, render_every_step=False, render_mode="rgb_array"
+    ):
+        self.goto_pose(
+            self.get_ee_pose() + pose,
+            render_every_step=render_every_step,
+            render_mode=render_mode,
+        )
 
-    def rotate_about_y_axis(self, angle, render_every_step=False):
+    def rotate_about_y_axis(
+        self, angle, render_every_step=False, render_mode="rgb_array"
+    ):
         rotation = self.quat_to_rpy(self.sim.data.body_xquat[10]) - np.array(
             [0, 0, angle],
         )
-        self.rotate_ee(rotation, render_every_step=render_every_step)
+        self.rotate_ee(
+            rotation, render_every_step=render_every_step, render_mode=render_mode
+        )
 
-    def lift(self, z_dist, render_every_step=False):
+    def lift(self, z_dist, render_every_step=False, render_mode="rgb_array"):
         assert z_dist >= 0
         self.goto_pose(
             self.get_ee_pose() + np.array([0.0, 0.0, z_dist]),
             render_every_step=render_every_step,
+            render_mode=render_mode,
         )
 
-    def drop(self, z_dist, render_every_step=False):
+    def drop(self, z_dist, render_every_step=False, render_mode="rgb_array"):
         assert z_dist >= 0
         self.goto_pose(
             self.get_ee_pose() + np.array([0.0, 0.0, -z_dist]),
             render_every_step=render_every_step,
+            render_mode=render_mode,
         )
 
-    def move_left(self, x_dist, render_every_step=False):
+    def move_left(self, x_dist, render_every_step=False, render_mode="rgb_array"):
         assert x_dist >= 0.0
         self.goto_pose(
             self.get_ee_pose() + np.array([-x_dist, 0.0, 0.0]),
             render_every_step=render_every_step,
+            render_mode=render_mode,
         )
 
-    def move_right(self, x_dist, render_every_step=False):
+    def move_right(self, x_dist, render_every_step=False, render_mode="rgb_array"):
         assert x_dist >= 0.0
         self.goto_pose(
             self.get_ee_pose() + np.array([x_dist, 0.0, 0.0]),
             render_every_step=render_every_step,
+            render_mode=render_mode,
         )
 
-    def move_forward(self, y_dist, render_every_step=False):
+    def move_forward(self, y_dist, render_every_step=False, render_mode="rgb_array"):
         assert y_dist >= 0.0
         self.goto_pose(
             self.get_ee_pose() + np.array([0.0, y_dist, 0.0]),
             render_every_step=render_every_step,
+            render_mode=render_mode,
         )
 
-    def move_backward(self, y_dist, render_every_step=False):
+    def move_backward(self, y_dist, render_every_step=False, render_mode="rgb_array"):
         assert y_dist >= 0.0
         self.goto_pose(
             self.get_ee_pose() + np.array([0.0, -y_dist, 0.0]),
             render_every_step=render_every_step,
+            render_mode=render_mode,
         )
 
     def break_apart_action(self, a):
@@ -383,21 +436,25 @@ class KitchenV0(robot_env.RobotEnv):
             broken_a[k] = a[v]
         return broken_a
 
-    def act(self, a, render_every_step=False):
+    def act(self, a, render_every_step=False, render_mode="rgb_array"):
         primitive_name_to_action_dict = self.break_apart_action(a)
         primitive_name = self.step_to_primitive_name[self.step_count]
         primitive_action = primitive_name_to_action_dict[primitive_name]
         primitive = self.primitive_name_to_func[primitive_name]
-        primitive(primitive_action, render_every_step=render_every_step)
+        primitive(
+            primitive_action,
+            render_every_step=render_every_step,
+            render_mode=render_mode,
+        )
 
-    def step(self, a, render_every_step=False):
+    def step(self, a, render_every_step=False, render_mode="rgb_array"):
         if not self.initializing:
             a = np.clip(a, self.action_space.low, self.action_space.high)
 
         if not self.initializing:
             if render_every_step:
                 self.img_array = []
-            self.act(a, render_every_step=render_every_step)
+            self.act(a, render_every_step=render_every_step, render_mode=render_mode)
         obs = self._get_obs()
 
         # rewards
@@ -430,7 +487,7 @@ class KitchenV0(robot_env.RobotEnv):
             img = self.render(mode="rgb_array")
             img = img.transpose(2, 0, 1).flatten()
             return img
-        if self.goal_concat:
+        else:
             return np.concatenate(
                 [self.obs_dict["qp"], self.obs_dict["obj_qp"], self.obs_dict["goal"]]
             )
@@ -499,16 +556,18 @@ class KitchenTaskRelaxV1(KitchenV0):
 
     def render(self, mode="human", imwidth=None, imheight=None):
         if mode == "rgb_array":
-            # camera = engine.MovableCamera(self.sim, 256, 256)
-            # camera.set_pose(
-            #     distance=2.2, lookat=[-0.2, 0.5, 2.0], azimuth=70, elevation=-35
-            # )
-            # img = camera.render()
-            if not imwidth:
-                imwidth = self.imwidth
-            if not imheight:
-                imheight = self.imheight
-            img = self.sim_robot.renderer.render_offscreen(imwidth, imheight)
-            return img
+            if self.sim_robot._use_dm_backend:
+                camera = engine.MovableCamera(self.sim, imwidth, imheight)
+                camera.set_pose(
+                    distance=2.2, lookat=[-0.2, 0.5, 2.0], azimuth=70, elevation=-35
+                )
+                img = camera.render()
+            else:
+                if not imwidth:
+                    imwidth = self.imwidth
+                if not imheight:
+                    imheight = self.imheight
+                img = self.sim_robot.renderer.render_offscreen(imwidth, imheight)
+                return img
         else:
             super(KitchenTaskRelaxV1, self).render()
