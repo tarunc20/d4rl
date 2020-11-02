@@ -262,30 +262,48 @@ class KitchenV0(robot_env.RobotEnv):
         return np.array([q[3], q[0], q[1], q[2]])
 
     def close_gripper(
-        self, unusued=None, render_every_step=False, render_mode="rgb_array"
+        self,
+        unusued=None,
+        render_every_step=False,
+        render_mode="rgb_array",
+        render_im_shape=(1000, 1000),
     ):
         for _ in range(200):
             self._set_action(np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]))
             self.sim.step()
             if render_every_step:
                 if render_mode == "rgb_array":
-                    self.img_array.append(self.render(render_mode, 1000, 1000))
+                    self.img_array.append(
+                        self.render(render_mode, render_im_shape[0], render_im_shape[1])
+                    )
                 else:
-                    self.render(render_mode, 1000, 1000)
+                    self.render(render_mode, render_im_shape[0], render_im_shape[1])
 
     def open_gripper(
-        self, unusued=None, render_every_step=False, render_mode="rgb_array"
+        self,
+        unusued=None,
+        render_every_step=False,
+        render_mode="rgb_array",
+        render_im_shape=(1000, 1000),
     ):
         for _ in range(200):
             self._set_action(np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.04, 0.04]))
             self.sim.step()
             if render_every_step:
                 if render_mode == "rgb_array":
-                    self.img_array.append(self.render(render_mode, 1000, 1000))
+                    self.img_array.append(
+                        self.render(render_mode, render_im_shape[0], render_im_shape[1])
+                    )
                 else:
-                    self.render(render_mode, 1000, 1000)
+                    self.render(render_mode, render_im_shape[0], render_im_shape[1])
 
-    def rotate_ee(self, rpy, render_every_step=False, render_mode="rgb_array"):
+    def rotate_ee(
+        self,
+        rpy,
+        render_every_step=False,
+        render_mode="rgb_array",
+        render_im_shape=(1000, 1000),
+    ):
         gripper = self.sim.data.qpos[7:9]
         for _ in range(200):
             quat = self.rpy_to_quat(rpy)
@@ -308,11 +326,19 @@ class KitchenV0(robot_env.RobotEnv):
             self.sim.step()
             if render_every_step:
                 if render_mode == "rgb_array":
-                    self.img_array.append(self.render(render_mode, 1000, 1000))
+                    self.img_array.append(
+                        self.render(render_mode, render_im_shape[0], render_im_shape[1])
+                    )
                 else:
-                    self.render(render_mode, 1000, 1000)
+                    self.render(render_mode, render_im_shape[0], render_im_shape[1])
 
-    def goto_pose(self, pose, render_every_step=False, render_mode="rgb_array"):
+    def goto_pose(
+        self,
+        pose,
+        render_every_step=False,
+        render_mode="rgb_array",
+        render_im_shape=(1000, 1000),
+    ):
         gripper = self.sim.data.qpos[7:9]
         for _ in range(300):
             self.reset_mocap2body_xpos(self.sim)
@@ -335,12 +361,18 @@ class KitchenV0(robot_env.RobotEnv):
             self.sim.step()
             if render_every_step:
                 if render_mode == "rgb_array":
-                    self.img_array.append(self.render(render_mode, 1000, 1000))
+                    self.img_array.append(
+                        self.render(render_mode, render_im_shape[0], render_im_shape[1])
+                    )
                 else:
-                    self.render(render_mode, 1000, 1000)
+                    self.render(render_mode, render_im_shape[0], render_im_shape[1])
 
     def angled_x_y_grasp(
-        self, angle_and_xy, render_every_step=False, render_mode="rgb_array"
+        self,
+        angle_and_xy,
+        render_every_step=False,
+        render_mode="rgb_array",
+        render_im_shape=(1000, 1000),
     ):
         angle, x_dist, y_dist = angle_and_xy
         rotation = self.quat_to_rpy(self.sim.data.body_xquat[10]) - np.array(
@@ -350,84 +382,145 @@ class KitchenV0(robot_env.RobotEnv):
             rotation,
             render_every_step=render_every_step,
             render_mode=render_mode,
+            render_im_shape=render_im_shape,
         )
         self.goto_pose(
             self.get_ee_pose() + np.array([x_dist, 0.0, 0]),
             render_every_step=render_every_step,
             render_mode=render_mode,
+            render_im_shape=render_im_shape,
         )
         self.goto_pose(
             self.get_ee_pose() + np.array([0.0, y_dist, 0]),
             render_every_step=render_every_step,
             render_mode=render_mode,
+            render_im_shape=render_im_shape,
         )
-        self.close_gripper(render_every_step=render_every_step, render_mode=render_mode)
+        self.close_gripper(
+            render_every_step=render_every_step,
+            render_mode=render_mode,
+            render_im_shape=render_im_shape,
+        )
 
     def move_delta_ee_pose(
-        self, pose, render_every_step=False, render_mode="rgb_array"
+        self,
+        pose,
+        render_every_step=False,
+        render_mode="rgb_array",
+        render_im_shape=(1000, 1000),
     ):
         self.goto_pose(
             self.get_ee_pose() + pose,
             render_every_step=render_every_step,
             render_mode=render_mode,
+            render_im_shape=render_im_shape,
         )
 
     def rotate_about_y_axis(
-        self, angle, render_every_step=False, render_mode="rgb_array"
+        self,
+        angle,
+        render_every_step=False,
+        render_mode="rgb_array",
+        render_im_shape=(1000, 1000),
     ):
         rotation = self.quat_to_rpy(self.sim.data.body_xquat[10]) - np.array(
             [0, 0, angle],
         )
         self.rotate_ee(
-            rotation, render_every_step=render_every_step, render_mode=render_mode
+            rotation,
+            render_every_step=render_every_step,
+            render_mode=render_mode,
+            render_im_shape=render_im_shape,
         )
 
-    def lift(self, z_dist, render_every_step=False, render_mode="rgb_array"):
+    def lift(
+        self,
+        z_dist,
+        render_every_step=False,
+        render_mode="rgb_array",
+        render_im_shape=(1000, 1000),
+    ):
         assert z_dist >= 0
         self.goto_pose(
             self.get_ee_pose() + np.array([0.0, 0.0, z_dist]),
             render_every_step=render_every_step,
             render_mode=render_mode,
+            render_im_shape=render_im_shape,
         )
 
-    def drop(self, z_dist, render_every_step=False, render_mode="rgb_array"):
+    def drop(
+        self,
+        z_dist,
+        render_every_step=False,
+        render_mode="rgb_array",
+        render_im_shape=(1000, 1000),
+    ):
         assert z_dist >= 0
         self.goto_pose(
             self.get_ee_pose() + np.array([0.0, 0.0, -z_dist]),
             render_every_step=render_every_step,
             render_mode=render_mode,
+            render_im_shape=render_im_shape,
         )
 
-    def move_left(self, x_dist, render_every_step=False, render_mode="rgb_array"):
+    def move_left(
+        self,
+        x_dist,
+        render_every_step=False,
+        render_mode="rgb_array",
+        render_im_shape=(1000, 1000),
+    ):
         assert x_dist >= 0.0
         self.goto_pose(
             self.get_ee_pose() + np.array([-x_dist, 0.0, 0.0]),
             render_every_step=render_every_step,
             render_mode=render_mode,
+            render_im_shape=render_im_shape,
         )
 
-    def move_right(self, x_dist, render_every_step=False, render_mode="rgb_array"):
+    def move_right(
+        self,
+        x_dist,
+        render_every_step=False,
+        render_mode="rgb_array",
+        render_im_shape=(1000, 1000),
+    ):
         assert x_dist >= 0.0
         self.goto_pose(
             self.get_ee_pose() + np.array([x_dist, 0.0, 0.0]),
             render_every_step=render_every_step,
             render_mode=render_mode,
+            render_im_shape=render_im_shape,
         )
 
-    def move_forward(self, y_dist, render_every_step=False, render_mode="rgb_array"):
+    def move_forward(
+        self,
+        y_dist,
+        render_every_step=False,
+        render_mode="rgb_array",
+        render_im_shape=(1000, 1000),
+    ):
         assert y_dist >= 0.0
         self.goto_pose(
             self.get_ee_pose() + np.array([0.0, y_dist, 0.0]),
             render_every_step=render_every_step,
             render_mode=render_mode,
+            render_im_shape=render_im_shape,
         )
 
-    def move_backward(self, y_dist, render_every_step=False, render_mode="rgb_array"):
+    def move_backward(
+        self,
+        y_dist,
+        render_every_step=False,
+        render_mode="rgb_array",
+        render_im_shape=(1000, 1000),
+    ):
         assert y_dist >= 0.0
         self.goto_pose(
             self.get_ee_pose() + np.array([0.0, -y_dist, 0.0]),
             render_every_step=render_every_step,
             render_mode=render_mode,
+            render_im_shape=render_im_shape,
         )
 
     def break_apart_action(self, a):
@@ -436,7 +529,13 @@ class KitchenV0(robot_env.RobotEnv):
             broken_a[k] = a[v]
         return broken_a
 
-    def act(self, a, render_every_step=False, render_mode="rgb_array"):
+    def act(
+        self,
+        a,
+        render_every_step=False,
+        render_mode="rgb_array",
+        render_im_shape=(1000, 1000),
+    ):
         primitive_name_to_action_dict = self.break_apart_action(a)
         primitive_name = self.step_to_primitive_name[self.step_count]
         primitive_action = primitive_name_to_action_dict[primitive_name]
@@ -445,16 +544,28 @@ class KitchenV0(robot_env.RobotEnv):
             primitive_action,
             render_every_step=render_every_step,
             render_mode=render_mode,
+            render_im_shape=render_im_shape,
         )
 
-    def step(self, a, render_every_step=False, render_mode="rgb_array"):
+    def step(
+        self,
+        a,
+        render_every_step=False,
+        render_mode="rgb_array",
+        render_im_shape=(1000, 1000),
+    ):
         if not self.initializing:
             a = np.clip(a, self.action_space.low, self.action_space.high)
 
         if not self.initializing:
             if render_every_step and render_mode == "rgb_array":
                 self.img_array = []
-            self.act(a, render_every_step=render_every_step, render_mode=render_mode)
+            self.act(
+                a,
+                render_every_step=render_every_step,
+                render_mode=render_mode,
+                render_im_shape=render_im_shape,
+            )
         obs = self._get_obs()
 
         # rewards
