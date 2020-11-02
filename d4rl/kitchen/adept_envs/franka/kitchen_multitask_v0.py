@@ -520,7 +520,7 @@ class KitchenV0(robot_env.RobotEnv):
             1e6 * round(success_percentage, 2) + abs(mean_score)
         )
 
-    def close_env(self):
+    def close(self):
         self.robot.close()
 
     def set_goal(self, goal):
