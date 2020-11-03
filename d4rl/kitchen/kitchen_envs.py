@@ -189,7 +189,7 @@ class KitchenMicrowaveV0(KitchenBase):
                 0.6 + delta,
             ]
         )
-        self.action_space = Box(action_low, action_high)
+        self.action_space = Box(action_low, action_high, dtype=np.float32)
 
 
 class KitchenKettleV0(KitchenBase):
@@ -245,7 +245,7 @@ class KitchenKettleV0(KitchenBase):
                 0.0,
             ]
         )
-        self.action_space = Box(action_low, action_high)
+        self.action_space = Box(action_low, action_high, dtype=np.float32)
 
 
 class KitchenBottomBurnerV0(KitchenBase):
@@ -307,7 +307,7 @@ class KitchenTopBurnerV0(KitchenBase):
                 0.0,
             ]
         )
-        self.action_space = Box(action_low, action_high)
+        self.action_space = Box(action_low, action_high, dtype=np.float32)
 
 
 class KitchenSlideCabinetV0(KitchenBase):
@@ -361,7 +361,7 @@ class KitchenSlideCabinetV0(KitchenBase):
                 0.0,
             ]
         )
-        self.action_space = Box(action_low, action_high)
+        self.action_space = Box(action_low, action_high, dtype=np.float32)
 
 
 class KitchenHingeCabinetV0(KitchenBase):
@@ -419,7 +419,7 @@ class KitchenHingeCabinetV0(KitchenBase):
                 0.25 + delta,
             ]
         )
-        self.action_space = Box(action_low, action_high)
+        self.action_space = Box(action_low, action_high, dtype=np.float32)
 
 
 class KitchenLightSwitchV0(KitchenBase):
@@ -475,4 +475,4 @@ class KitchenLightSwitchV0(KitchenBase):
                 0.0,
             ]
         )
-        self.action_space = Box(action_low, action_high)
+        self.action_space = Box(action_low, action_high, dtype=np.float32)

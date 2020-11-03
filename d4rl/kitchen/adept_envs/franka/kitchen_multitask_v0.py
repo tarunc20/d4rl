@@ -147,11 +147,11 @@ class KitchenV0(robot_env.RobotEnv):
 
         act_lower = -1.5 * np.ones((16,))
         act_upper = 1.5 * np.ones((16,))
-        self.action_space = spaces.Box(act_lower, act_upper)
+        self.action_space = spaces.Box(act_lower, act_upper, dtype=np.float32)
 
         obs_upper = 8.0 * np.ones(self.obs_dim)
         obs_lower = -obs_upper
-        self.observation_space = spaces.Box(obs_lower, obs_upper)
+        self.observation_space = spaces.Box(obs_lower, obs_upper, dtype=np.float32)
         if self.image_obs:
             self.imlength = imwidth * imheight
             self.imlength *= 3
@@ -645,7 +645,9 @@ class KitchenV0(robot_env.RobotEnv):
     def goal_space(self):
         len_obs = self.observation_space.low.shape[0]
         env_lim = np.abs(self.observation_space.low[0])
-        return spaces.Box(low=-env_lim, high=env_lim, shape=(len_obs // 2,))
+        return spaces.Box(
+            low=-env_lim, high=env_lim, shape=(len_obs // 2,), dtype=np.float32
+        )
 
     def convert_to_active_observation(self, observation):
         return observation
