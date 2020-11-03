@@ -66,6 +66,7 @@ class KitchenV0(robot_env.RobotEnv):
             move_backward=self.move_backward,
             open_gripper=self.open_gripper,
             close_gripper=self.close_gripper,
+            no_op=self.no_op,
         )
         self.primitive_name_to_action_idx = dict(
             goto_pose=[0, 1, 2],
@@ -80,11 +81,13 @@ class KitchenV0(robot_env.RobotEnv):
             move_backward=15,
             open_gripper=0,  # doesn't matter
             close_gripper=0,  # doesn't matter
+            no_op=0,  # doesn't matter
         )
         self.max_arg_len = 16
         self.image_obs = image_obs
         self.imwidth = imwidth
         self.imheight = imheight
+        self.num_primitives = len(self.primitive_name_to_func)
         super().__init__(
             self.MODEl,
             robot=self.make_robot(
@@ -260,6 +263,15 @@ class KitchenV0(robot_env.RobotEnv):
 
     def convert_xyzw_to_wxyz(self, q):
         return np.array([q[3], q[0], q[1], q[2]])
+
+    def no_op(
+        self,
+        unused=None,
+        render_every_step=False,
+        render_mode="rgb_array",
+        render_im_shape=(1000, 1000),
+    ):
+        pass
 
     def close_gripper(
         self,
