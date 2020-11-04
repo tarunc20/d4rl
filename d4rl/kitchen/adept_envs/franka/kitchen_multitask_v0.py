@@ -47,12 +47,28 @@ class KitchenV0(robot_env.RobotEnv):
         image_obs=False,
         imwidth=64,
         imheight=64,
+        fixed_schema=True,
     ):
         self.obs_dict = {}
         self.robot_noise_ratio = 0.1  # 10% as per robot_config specs
         self.goal = np.zeros((30,))
         self.max_steps = max_steps
         self.step_count = 0
+        self.primitive_idx_to_name = {
+            0: "goto_pose",
+            1: "angled_x_y_grasp",
+            2: "move_delta_ee_pose",
+            3: "rotate_about_y_axis",
+            4: "lift",
+            5: "drop",
+            6: "move_left",
+            7: "move_right",
+            8: "move_forward",
+            9: "move_backward",
+            10: "open_gripper",
+            11: "close_gripper",
+            12: "no_op",
+        }
         self.primitive_name_to_func = dict(
             goto_pose=self.goto_pose,
             angled_x_y_grasp=self.angled_x_y_grasp,
@@ -88,6 +104,7 @@ class KitchenV0(robot_env.RobotEnv):
         self.imwidth = imwidth
         self.imheight = imheight
         self.num_primitives = len(self.primitive_name_to_func)
+        self.fixed_schema = fixed_schema
         super().__init__(
             self.MODEl,
             robot=self.make_robot(
@@ -150,6 +167,11 @@ class KitchenV0(robot_env.RobotEnv):
 
         act_lower = -1.5 * np.ones((16,))
         act_upper = 1.5 * np.ones((16,))
+        if not self.fixed_schema:
+            act_lower_primitive = np.zeros(self.num_primitives)
+            act_upper_primitive = np.ones(self.num_primitives)
+            act_lower = np.concatenate((act_lower, act_lower_primitive))
+            act_upper = np.concatenate((act_upper, act_upper_primitive))
         self.action_space = spaces.Box(act_lower, act_upper, dtype=np.float32)
 
         obs_upper = 8.0 * np.ones(self.obs_dim)
@@ -548,8 +570,16 @@ class KitchenV0(robot_env.RobotEnv):
         render_mode="rgb_array",
         render_im_shape=(1000, 1000),
     ):
-        primitive_name_to_action_dict = self.break_apart_action(a)
-        primitive_name = self.step_to_primitive_name[self.step_count]
+        if self.fixed_schema:
+            primitive_args = a
+            primitive_name = self.step_to_primitive_name[self.step_count]
+        else:
+            primitive_idx, primitive_args = (
+                np.argmax(a[: self.num_primitives]),
+                a[self.num_primitives :],
+            )
+            primitive_name = self.primitive_idx_to_name[primitive_idx]
+        primitive_name_to_action_dict = self.break_apart_action(primitive_args)
         primitive_action = primitive_name_to_action_dict[primitive_name]
         primitive = self.primitive_name_to_func[primitive_name]
         primitive(

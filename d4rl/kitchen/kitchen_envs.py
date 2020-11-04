@@ -408,6 +408,16 @@ class KitchenBase(KitchenTaskRelaxV1):
             self.one_hot_task[idx] = 1
             self.step_to_primitive_name = self.task_to_step_to_primitive_name_dict[task]
             self.action_space = self.task_to_action_space[task]
+            if not self.fixed_schema:
+                act_lower_primitive = np.zeros(self.num_primitives)
+                act_upper_primitive = np.ones(self.num_primitives)
+                action_low = np.concatenate(
+                    (self.action_space.low, act_lower_primitive)
+                )
+                action_high = np.concatenate(
+                    (self.action_space.high, act_upper_primitive)
+                )
+                self.action_space = Box(action_low, action_high, dtype=np.float32)
         return super(KitchenBase, self).reset_model()
 
     def _get_reward_n_score(self, obs_dict):
@@ -535,6 +545,11 @@ class KitchenMicrowaveV0(KitchenBase):
                 0.6 + delta,
             ]
         )
+        if not self.fixed_schema:
+            act_lower_primitive = np.zeros(self.num_primitives)
+            act_upper_primitive = np.ones(self.num_primitives)
+            action_low = np.concatenate((action_low, act_lower_primitive))
+            action_high = np.concatenate((action_high, act_upper_primitive))
         self.action_space = Box(action_low, action_high, dtype=np.float32)
 
 
@@ -591,6 +606,11 @@ class KitchenKettleV0(KitchenBase):
                 0.0,
             ]
         )
+        if not self.fixed_schema:
+            act_lower_primitive = np.zeros(self.num_primitives)
+            act_upper_primitive = np.ones(self.num_primitives)
+            action_low = np.concatenate((action_low, act_lower_primitive))
+            action_high = np.concatenate((action_high, act_upper_primitive))
         self.action_space = Box(action_low, action_high, dtype=np.float32)
 
 
@@ -653,6 +673,11 @@ class KitchenTopBurnerV0(KitchenBase):
                 0.0,
             ]
         )
+        if not self.fixed_schema:
+            act_lower_primitive = np.zeros(self.num_primitives)
+            act_upper_primitive = np.ones(self.num_primitives)
+            action_low = np.concatenate((action_low, act_lower_primitive))
+            action_high = np.concatenate((action_high, act_upper_primitive))
         self.action_space = Box(action_low, action_high, dtype=np.float32)
 
 
@@ -707,6 +732,11 @@ class KitchenSlideCabinetV0(KitchenBase):
                 0.0,
             ]
         )
+        if not self.fixed_schema:
+            act_lower_primitive = np.zeros(self.num_primitives)
+            act_upper_primitive = np.ones(self.num_primitives)
+            action_low = np.concatenate((action_low, act_lower_primitive))
+            action_high = np.concatenate((action_high, act_upper_primitive))
         self.action_space = Box(action_low, action_high, dtype=np.float32)
 
 
@@ -765,6 +795,11 @@ class KitchenHingeCabinetV0(KitchenBase):
                 0.25 + delta,
             ]
         )
+        if not self.fixed_schema:
+            act_lower_primitive = np.zeros(self.num_primitives)
+            act_upper_primitive = np.ones(self.num_primitives)
+            action_low = np.concatenate((action_low, act_lower_primitive))
+            action_high = np.concatenate((action_high, act_upper_primitive))
         self.action_space = Box(action_low, action_high, dtype=np.float32)
 
 
@@ -821,6 +856,11 @@ class KitchenLightSwitchV0(KitchenBase):
                 0.0,
             ]
         )
+        if not self.fixed_schema:
+            act_lower_primitive = np.zeros(self.num_primitives)
+            act_upper_primitive = np.ones(self.num_primitives)
+            action_low = np.concatenate((action_low, act_lower_primitive))
+            action_high = np.concatenate((action_high, act_upper_primitive))
         self.action_space = Box(action_low, action_high, dtype=np.float32)
 
 
