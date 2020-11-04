@@ -355,8 +355,8 @@ class KitchenBase(KitchenTaskRelaxV1):
             self.one_hot_task = np.zeros(self.num_tasks)
             obs_upper_old = self.observation_space.high
             obs_lower_old = self.observation_space.low
-            obs_upper_one_hot = np.ones(self.num_primitives)
-            obs_lower_one_hot = np.zeros(self.num_primitives)
+            obs_upper_one_hot = np.ones(self.num_tasks)
+            obs_lower_one_hot = np.zeros(self.num_tasks)
             obs_lower = np.concatenate((obs_lower_old, obs_lower_one_hot))
             obs_upper = np.concatenate((obs_upper_old, obs_upper_one_hot))
             self.observation_space = spaces.Box(
@@ -461,7 +461,11 @@ class KitchenBase(KitchenTaskRelaxV1):
         next_obj_obs = self.obs_dict["obj_qp"]
         next_goal = self.obs_dict["goal"]
         idx_offset = len(next_q_obs)
-        for element in self.tasks_to_complete:
+        if not self.initializing and self.multitask:
+            tasks_to_log = self.TASK_ELEMENTS
+        else:
+            tasks_to_log = self.tasks_to_complete
+        for element in tasks_to_log:
             element_idx = OBS_ELEMENT_INDICES[element]
             distance = np.linalg.norm(
                 next_obj_obs[..., element_idx - idx_offset] - next_goal[element_idx]
@@ -820,7 +824,7 @@ class KitchenLightSwitchV0(KitchenBase):
         self.action_space = Box(action_low, action_high, dtype=np.float32)
 
 
-class KitchenAllV0(KitchenBase):
+class KitchenMultitaskAllV0(KitchenBase):
     TASK_ELEMENTS = [
         "light switch",
         "top burner",
@@ -831,5 +835,7 @@ class KitchenAllV0(KitchenBase):
     ]
 
     def __init__(self, delta=0, **kwargs):
-        super(KitchenAllV0, self).__init__(max_steps=6, delta=delta, **kwargs)
+        super(KitchenMultitaskAllV0, self).__init__(
+            max_steps=6, delta=delta, multitask=True, **kwargs
+        )
         self.reset_model()
