@@ -422,7 +422,6 @@ class KitchenBase(KitchenTaskRelaxV1):
 
     def _get_reward_n_score(self, obs_dict):
         reward_dict, score = super(KitchenBase, self)._get_reward_n_score(obs_dict)
-        reward = 0.0
         next_q_obs = obs_dict["qp"]
         next_obj_obs = obs_dict["obj_qp"]
         next_goal = obs_dict["goal"]

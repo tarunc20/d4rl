@@ -409,6 +409,7 @@ class KitchenV0(robot_env.RobotEnv):
         render_im_shape=(1000, 1000),
     ):
         angle, x_dist, y_dist = angle_and_xy
+        angle = np.clip(angle, -np.pi, np.pi)
         rotation = self.quat_to_rpy(self.sim.data.body_xquat[10]) - np.array(
             [angle, 0, 0]
         )
@@ -457,6 +458,7 @@ class KitchenV0(robot_env.RobotEnv):
         render_mode="rgb_array",
         render_im_shape=(1000, 1000),
     ):
+        angle = np.clip(angle, -np.pi, np.pi)
         rotation = self.quat_to_rpy(self.sim.data.body_xquat[10]) - np.array(
             [0, 0, angle],
         )
@@ -474,7 +476,7 @@ class KitchenV0(robot_env.RobotEnv):
         render_mode="rgb_array",
         render_im_shape=(1000, 1000),
     ):
-        assert z_dist >= 0
+        z_dist = np.maximum(z_dist, 0.0)
         self.goto_pose(
             self.get_ee_pose() + np.array([0.0, 0.0, z_dist]),
             render_every_step=render_every_step,
@@ -489,7 +491,7 @@ class KitchenV0(robot_env.RobotEnv):
         render_mode="rgb_array",
         render_im_shape=(1000, 1000),
     ):
-        assert z_dist >= 0
+        z_dist = np.maximum(z_dist, 0.0)
         self.goto_pose(
             self.get_ee_pose() + np.array([0.0, 0.0, -z_dist]),
             render_every_step=render_every_step,
@@ -504,7 +506,7 @@ class KitchenV0(robot_env.RobotEnv):
         render_mode="rgb_array",
         render_im_shape=(1000, 1000),
     ):
-        assert x_dist >= 0.0
+        x_dist = np.maximum(x_dist, 0.0)
         self.goto_pose(
             self.get_ee_pose() + np.array([-x_dist, 0.0, 0.0]),
             render_every_step=render_every_step,
@@ -519,7 +521,7 @@ class KitchenV0(robot_env.RobotEnv):
         render_mode="rgb_array",
         render_im_shape=(1000, 1000),
     ):
-        assert x_dist >= 0.0
+        x_dist = np.maximum(x_dist, 0.0)
         self.goto_pose(
             self.get_ee_pose() + np.array([x_dist, 0.0, 0.0]),
             render_every_step=render_every_step,
@@ -534,7 +536,7 @@ class KitchenV0(robot_env.RobotEnv):
         render_mode="rgb_array",
         render_im_shape=(1000, 1000),
     ):
-        assert y_dist >= 0.0
+        y_dist = np.maximum(y_dist, 0.0)
         self.goto_pose(
             self.get_ee_pose() + np.array([0.0, y_dist, 0.0]),
             render_every_step=render_every_step,
@@ -549,7 +551,7 @@ class KitchenV0(robot_env.RobotEnv):
         render_mode="rgb_array",
         render_im_shape=(1000, 1000),
     ):
-        assert y_dist >= 0.0
+        y_dist = np.maximum(y_dist, 0.0)
         self.goto_pose(
             self.get_ee_pose() + np.array([0.0, -y_dist, 0.0]),
             render_every_step=render_every_step,
