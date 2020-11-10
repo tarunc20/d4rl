@@ -34,7 +34,14 @@ class KitchenBase(KitchenTaskRelaxV1):
     REMOVE_TASKS_WHEN_COMPLETE = False
     TERMINATE_ON_TASK_COMPLETE = False
 
-    def __init__(self, dense=True, delta=0.0, multitask=False, **kwargs):
+    def __init__(
+        self,
+        dense=True,
+        delta=0.0,
+        multitask=False,
+        use_combined_action_space=False,
+        **kwargs
+    ):
         self.tasks_to_complete = set(self.TASK_ELEMENTS)
         self.dense = dense
         super(KitchenBase, self).__init__(**kwargs)
@@ -98,41 +105,43 @@ class KitchenBase(KitchenTaskRelaxV1):
                             0.0,
                             0.0,
                             0.0,
-                            -np.pi / 6 - delta,
-                            -0.25 - delta,
-                            0.9 - delta,
+                            -np.pi / 6,
+                            -0.25,
+                            0.9,
                             0,
                             0,
                             0,
                             0,
                             0,
-                            0.5 - delta,
+                            0.5,
                             0,
                             0,
                             0,
-                            0.6 - delta,
+                            0.6,
                         ]
-                    ),
+                    )
+                    - delta,
                     np.array(
                         [
                             0.0,
                             0.0,
                             0.0,
-                            -np.pi / 6 + delta,
-                            -0.25 + delta,
-                            0.9 + delta,
+                            -np.pi / 6,
+                            -0.25,
+                            0.9,
                             0,
                             0,
                             0,
                             0,
                             0,
-                            0.5 + delta,
+                            0.5,
                             0,
                             0,
                             0,
-                            0.6 + delta,
+                            0.6,
                         ]
-                    ),
+                    )
+                    + delta,
                     dtype=np.float32,
                 ),
                 "kettle": Box(
@@ -142,40 +151,42 @@ class KitchenBase(KitchenTaskRelaxV1):
                             0.0,
                             0.0,
                             0,
-                            0.2 - delta,
-                            0.65 - delta,
-                            0.25 - delta,
-                            1.1 - delta,
-                            0.25 - delta,
+                            0.2,
+                            0.65,
+                            0.25,
+                            1.1,
+                            0.25,
                             0,
                             0,
-                            0.25 - delta,
+                            0.25,
                             0,
                             0,
                             0,
                             0.0,
                         ]
-                    ),
+                    )
+                    - delta,
                     np.array(
                         [
                             0.0,
                             0.0,
                             0.0,
                             0,
-                            0.2 + delta,
-                            0.65 + delta,
-                            0.25 + delta,
-                            1.1 + delta,
-                            0.25 + delta,
+                            0.2,
+                            0.65,
+                            0.25,
+                            1.1,
+                            0.25,
                             0,
                             0,
-                            0.5 + delta,
+                            0.5,
                             0,
                             0,
                             0,
                             0.0,
                         ]
-                    ),
+                    )
+                    + delta,
                     dtype=np.float32,
                 ),
                 "top burner": Box(
@@ -185,40 +196,42 @@ class KitchenBase(KitchenTaskRelaxV1):
                             0.0,
                             0.0,
                             0,
-                            0.5 - delta,
-                            1.1 - delta,
+                            0.5,
+                            1.1,
                             0.0,
                             0.0,
                             0.0,
-                            -np.pi / 4 - delta,
-                            0.55 - delta,
+                            -np.pi / 4,
+                            0.55,
                             0.0,
                             0,
                             0,
                             0,
                             0.0,
                         ]
-                    ),
+                    )
+                    - delta,
                     np.array(
                         [
                             0.0,
                             0.0,
                             0.0,
                             0,
-                            0.5 + delta,
-                            1.1 + delta,
+                            0.5,
+                            1.1,
                             0.0,
                             0.0,
                             0.0,
-                            -np.pi / 4 + delta,
-                            0.55 + delta,
+                            -np.pi / 4,
+                            0.55,
                             0.0,
                             0,
                             0,
                             0,
                             0.0,
                         ]
-                    ),
+                    )
+                    + delta,
                     dtype=np.float32,
                 ),
                 "slide cabinet": Box(
@@ -228,40 +241,42 @@ class KitchenBase(KitchenTaskRelaxV1):
                             0.0,
                             0.0,
                             0.0,
-                            0.7 - delta,
-                            1.0 - delta,
+                            0.7,
+                            1.0,
                             0.0,
                             0.0,
                             0.0,
                             0.0,
-                            1 - delta,
+                            1,
                             0.0,
                             0.0,
-                            0.6 - delta,
+                            0.6,
                             0.0,
                             0.0,
                         ]
-                    ),
+                    )
+                    - delta,
                     np.array(
                         [
                             0.0,
                             0.0,
                             0.0,
                             0.0,
-                            0.7 + delta,
-                            1.0 + delta,
+                            0.7,
+                            1.0,
                             0.0,
                             0.0,
                             0.0,
                             0.0,
-                            1 + delta,
+                            1,
                             0.0,
                             0.0,
-                            0.6 + delta,
+                            0.6,
                             0.0,
                             0.0,
                         ]
-                    ),
+                    )
+                    + delta,
                     dtype=np.float32,
                 ),
                 "hinge cabinet": Box(
@@ -270,41 +285,43 @@ class KitchenBase(KitchenTaskRelaxV1):
                             0.0,
                             0.0,
                             0.0,
-                            -np.pi / 6 - delta,
-                            -0.35 - delta,
-                            0.1 - delta,
-                            0.5 - delta,
-                            -0.5 - delta,
+                            -np.pi / 6,
+                            -0.35,
+                            0.1,
+                            0.5,
+                            -0.5,
                             0.0,
                             0.0,
-                            1 - delta,
+                            1,
                             0.0,
                             0,
-                            1 - delta,
+                            1,
                             0,
-                            0.25 - delta,
+                            0.25,
                         ]
-                    ),
+                    )
+                    - delta,
                     np.array(
                         [
                             0.0,
                             0.0,
                             0.0,
-                            np.pi / 6 + delta,
-                            -0.35 + delta,
-                            1.4 + delta,
-                            0.5 + delta,
-                            -0.5 + delta,
+                            np.pi / 6,
+                            -0.35,
+                            1.4,
+                            0.5,
+                            -0.5,
                             0.0,
                             0.0,
-                            1 + delta,
+                            1,
                             0.0,
                             0,
-                            1 + delta,
+                            1,
                             0,
-                            0.25 + delta,
+                            0.25,
                         ]
-                    ),
+                    )
+                    + delta,
                     dtype=np.float32,
                 ),
                 "light switch": Box(
@@ -320,14 +337,15 @@ class KitchenBase(KitchenTaskRelaxV1):
                             0.0,
                             0.0,
                             0.0,
-                            0.45 - delta,
+                            0.45,
                             0.0,
-                            0.45 - delta,
-                            0.45 - delta,
-                            1.25 - delta,
+                            0.45,
+                            0.45,
+                            1.25,
                             0.0,
                         ]
-                    ),
+                    )
+                    - delta,
                     np.array(
                         [
                             0.0,
@@ -340,17 +358,68 @@ class KitchenBase(KitchenTaskRelaxV1):
                             0.0,
                             0.0,
                             0.0,
-                            0.45 + delta,
+                            0.45,
                             0.0,
-                            0.45 + delta,
-                            0.45 + delta,
-                            1.25 + delta,
+                            0.45,
+                            0.45,
+                            1.25,
                             0.0,
                         ]
-                    ),
+                    )
+                    + delta,
                     dtype=np.float32,
                 ),
             }
+            combined_action_space_low = (
+                np.array(
+                    [
+                        0.0,
+                        0.0,
+                        0.0,
+                        -0.52359879,
+                        -0.34999999,
+                        0.0,
+                        0.0,
+                        -0.5,
+                        0.0,
+                        -0.78539819,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                    ]
+                )
+                - delta
+            )
+            combined_action_space_high = (
+                np.array(
+                    [
+                        -0.0,
+                        -0.0,
+                        -0.0,
+                        0.52359879,
+                        0.69999999,
+                        1.39999998,
+                        0.5,
+                        1.10000002,
+                        0.25,
+                        -0.0,
+                        1.0,
+                        0.5,
+                        0.44999999,
+                        1.0,
+                        1.25,
+                        0.60000002,
+                    ]
+                )
+                + delta
+            )
+            self.combined_action_space = Box(
+                combined_action_space_low, combined_action_space_high, dtype=np.float32
+            )
+            self.use_combined_action_space = use_combined_action_space
             self.num_tasks = len(self.TASK_ELEMENTS)
             self.one_hot_task = np.zeros(self.num_tasks)
             obs_upper_old = self.observation_space.high
@@ -408,14 +477,16 @@ class KitchenBase(KitchenTaskRelaxV1):
             self.one_hot_task[idx] = 1
             self.step_to_primitive_name = self.task_to_step_to_primitive_name_dict[task]
             self.action_space = self.task_to_action_space[task]
+            if self.use_combined_action_space:
+                self.action_space = self.combined_action_space
             if not self.fixed_schema:
                 act_lower_primitive = np.zeros(self.num_primitives)
                 act_upper_primitive = np.ones(self.num_primitives)
                 action_low = np.concatenate(
-                    (self.action_space.low, act_lower_primitive)
+                    (act_lower_primitive, self.action_space.low)
                 )
                 action_high = np.concatenate(
-                    (self.action_space.high, act_upper_primitive)
+                    (act_upper_primitive, self.action_space.high)
                 )
                 self.action_space = Box(action_low, action_high, dtype=np.float32)
         return super(KitchenBase, self).reset_model()
@@ -508,19 +579,19 @@ class KitchenMicrowaveV0(KitchenBase):
                 0.0,
                 0.0,
                 0.0,
-                -np.pi / 6 - delta,
-                -0.25 - delta,
-                0.9 - delta,
+                -np.pi / 6,
+                -0.25,
+                0.9,
                 0,
                 0,
                 0,
                 0,
                 0,
-                0.5 - delta,
+                0.5,
                 0,
                 0,
                 0,
-                0.6 - delta,
+                0.6,
             ]
         )
 
@@ -529,27 +600,29 @@ class KitchenMicrowaveV0(KitchenBase):
                 0.0,
                 0.0,
                 0.0,
-                -np.pi / 6 + delta,
-                -0.25 + delta,
-                0.9 + delta,
+                -np.pi / 6,
+                -0.25,
+                0.9,
                 0,
                 0,
                 0,
                 0,
                 0,
-                0.5 + delta,
+                0.5,
                 0,
                 0,
                 0,
-                0.6 + delta,
+                0.6,
             ]
         )
         if not self.fixed_schema:
             act_lower_primitive = np.zeros(self.num_primitives)
             act_upper_primitive = np.ones(self.num_primitives)
-            action_low = np.concatenate((action_low, act_lower_primitive))
-            action_high = np.concatenate((action_high, act_upper_primitive))
-        self.action_space = Box(action_low, action_high, dtype=np.float32)
+            action_low = np.concatenate((act_lower_primitive, action_low))
+            action_high = np.concatenate((act_upper_primitive, action_high))
+        self.action_space = Box(
+            action_low - delta, action_high + delta, dtype=np.float32
+        )
 
 
 class KitchenKettleV0(KitchenBase):
@@ -570,14 +643,14 @@ class KitchenKettleV0(KitchenBase):
                 0.0,
                 0.0,
                 0,
-                0.2 - delta,
-                0.65 - delta,
-                0.25 - delta,
-                1.1 - delta,
-                0.25 - delta,
+                0.2,
+                0.65,
+                0.25,
+                1.1,
+                0.25,
                 0,
                 0,
-                0.25 - delta,
+                0.25,
                 0,
                 0,
                 0,
@@ -591,14 +664,14 @@ class KitchenKettleV0(KitchenBase):
                 0.0,
                 0.0,
                 0,
-                0.2 + delta,
-                0.65 + delta,
-                0.25 + delta,
-                1.1 + delta,
-                0.25 + delta,
+                0.2,
+                0.65,
+                0.25,
+                1.1,
+                0.25,
                 0,
                 0,
-                0.5 + delta,
+                0.5,
                 0,
                 0,
                 0,
@@ -608,9 +681,11 @@ class KitchenKettleV0(KitchenBase):
         if not self.fixed_schema:
             act_lower_primitive = np.zeros(self.num_primitives)
             act_upper_primitive = np.ones(self.num_primitives)
-            action_low = np.concatenate((action_low, act_lower_primitive))
-            action_high = np.concatenate((action_high, act_upper_primitive))
-        self.action_space = Box(action_low, action_high, dtype=np.float32)
+            action_low = np.concatenate((act_lower_primitive, action_low))
+            action_high = np.concatenate((act_upper_primitive, action_high))
+        self.action_space = Box(
+            action_low - delta, action_high + delta, dtype=np.float32
+        )
 
 
 class KitchenBottomBurnerV0(KitchenBase):
@@ -637,13 +712,13 @@ class KitchenTopBurnerV0(KitchenBase):
                 0.0,
                 0.0,
                 0,
-                0.5 - delta,
-                1.1 - delta,
+                0.5,
+                1.1,
                 0.0,
                 0.0,
                 0.0,
-                -np.pi / 4 - delta,
-                0.55 - delta,
+                -np.pi / 4,
+                0.55,
                 0.0,
                 0,
                 0,
@@ -658,13 +733,13 @@ class KitchenTopBurnerV0(KitchenBase):
                 0.0,
                 0.0,
                 0,
-                0.5 + delta,
-                1.1 + delta,
+                0.5,
+                1.1,
                 0.0,
                 0.0,
                 0.0,
-                -np.pi / 4 + delta,
-                0.55 + delta,
+                -np.pi / 4,
+                0.55,
                 0.0,
                 0,
                 0,
@@ -675,9 +750,11 @@ class KitchenTopBurnerV0(KitchenBase):
         if not self.fixed_schema:
             act_lower_primitive = np.zeros(self.num_primitives)
             act_upper_primitive = np.ones(self.num_primitives)
-            action_low = np.concatenate((action_low, act_lower_primitive))
-            action_high = np.concatenate((action_high, act_upper_primitive))
-        self.action_space = Box(action_low, action_high, dtype=np.float32)
+            action_low = np.concatenate((act_lower_primitive, action_low))
+            action_high = np.concatenate((act_upper_primitive, action_high))
+        self.action_space = Box(
+            action_low - delta, action_high + delta, dtype=np.float32
+        )
 
 
 class KitchenSlideCabinetV0(KitchenBase):
@@ -696,16 +773,16 @@ class KitchenSlideCabinetV0(KitchenBase):
                 0.0,
                 0.0,
                 0.0,
-                0.7 - delta,
-                1.0 - delta,
+                0.7,
+                1.0,
                 0.0,
                 0.0,
                 0.0,
                 0.0,
-                1 - delta,
+                1,
                 0.0,
                 0.0,
-                0.6 - delta,
+                0.6,
                 0.0,
                 0.0,
             ]
@@ -717,16 +794,16 @@ class KitchenSlideCabinetV0(KitchenBase):
                 0.0,
                 0.0,
                 0.0,
-                0.7 + delta,
-                1.0 + delta,
+                0.7,
+                1.0,
                 0.0,
                 0.0,
                 0.0,
                 0.0,
-                1 + delta,
+                1,
                 0.0,
                 0.0,
-                0.6 + delta,
+                0.6,
                 0.0,
                 0.0,
             ]
@@ -734,9 +811,11 @@ class KitchenSlideCabinetV0(KitchenBase):
         if not self.fixed_schema:
             act_lower_primitive = np.zeros(self.num_primitives)
             act_upper_primitive = np.ones(self.num_primitives)
-            action_low = np.concatenate((action_low, act_lower_primitive))
-            action_high = np.concatenate((action_high, act_upper_primitive))
-        self.action_space = Box(action_low, action_high, dtype=np.float32)
+            action_low = np.concatenate((act_lower_primitive, action_low))
+            action_high = np.concatenate((act_upper_primitive, action_high))
+        self.action_space = Box(
+            action_low - delta, action_high + delta, dtype=np.float32
+        )
 
 
 class KitchenHingeCabinetV0(KitchenBase):
@@ -758,19 +837,19 @@ class KitchenHingeCabinetV0(KitchenBase):
                 0.0,
                 0.0,
                 0.0,
-                -np.pi / 6 - delta,
-                -0.35 - delta,
-                0.1 - delta,
-                0.5 - delta,
-                -0.5 - delta,
+                -np.pi / 6,
+                -0.35,
+                0.1,
+                0.5,
+                -0.5,
                 0.0,
                 0.0,
-                1 - delta,
+                1,
                 0.0,
                 0,
-                1 - delta,
+                1,
                 0,
-                0.25 - delta,
+                0.25,
             ]
         )
 
@@ -779,27 +858,29 @@ class KitchenHingeCabinetV0(KitchenBase):
                 0.0,
                 0.0,
                 0.0,
-                np.pi / 6 + delta,
-                -0.35 + delta,
-                1.4 + delta,
-                0.5 + delta,
-                -0.5 + delta,
+                np.pi / 6,
+                -0.35,
+                1.4,
+                0.5,
+                -0.5,
                 0.0,
                 0.0,
-                1 + delta,
+                1,
                 0.0,
                 0,
-                1 + delta,
+                1,
                 0,
-                0.25 + delta,
+                0.25,
             ]
         )
         if not self.fixed_schema:
             act_lower_primitive = np.zeros(self.num_primitives)
             act_upper_primitive = np.ones(self.num_primitives)
-            action_low = np.concatenate((action_low, act_lower_primitive))
-            action_high = np.concatenate((action_high, act_upper_primitive))
-        self.action_space = Box(action_low, action_high, dtype=np.float32)
+            action_low = np.concatenate((act_lower_primitive, action_low))
+            action_high = np.concatenate((act_upper_primitive, action_high))
+        self.action_space = Box(
+            action_low - delta, action_high + delta, dtype=np.float32
+        )
 
 
 class KitchenLightSwitchV0(KitchenBase):
@@ -826,11 +907,11 @@ class KitchenLightSwitchV0(KitchenBase):
                 0.0,
                 0.0,
                 0.0,
-                0.45 - delta,
+                0.45,
                 0.0,
-                0.45 - delta,
-                0.45 - delta,
-                1.25 - delta,
+                0.45,
+                0.45,
+                1.25,
                 0.0,
             ]
         )
@@ -847,20 +928,22 @@ class KitchenLightSwitchV0(KitchenBase):
                 0.0,
                 0.0,
                 0.0,
-                0.45 + delta,
+                0.45,
                 0.0,
-                0.45 + delta,
-                0.45 + delta,
-                1.25 + delta,
+                0.45,
+                0.45,
+                1.25,
                 0.0,
             ]
         )
         if not self.fixed_schema:
             act_lower_primitive = np.zeros(self.num_primitives)
             act_upper_primitive = np.ones(self.num_primitives)
-            action_low = np.concatenate((action_low, act_lower_primitive))
-            action_high = np.concatenate((action_high, act_upper_primitive))
-        self.action_space = Box(action_low, action_high, dtype=np.float32)
+            action_low = np.concatenate((act_lower_primitive, action_low))
+            action_high = np.concatenate((act_upper_primitive, action_high))
+        self.action_space = Box(
+            action_low - delta, action_high + delta, dtype=np.float32
+        )
 
 
 class KitchenMultitaskAllV0(KitchenBase):

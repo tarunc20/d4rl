@@ -184,6 +184,11 @@ class KitchenV0(robot_env.RobotEnv):
                 0, 255, (self.imlength,), dtype=np.uint8
             )
 
+    def get_idx_from_primitive_name(self, primitive_name):
+        for idx, pn in self.primitive_idx_to_name.items():
+            if pn == primitive_name:
+                return idx
+
     def get_site_xpos(self, name):
         id = self.sim.model.site_name2id(name)
         return self.sim.data.site_xpos[id]
@@ -572,6 +577,8 @@ class KitchenV0(robot_env.RobotEnv):
         render_mode="rgb_array",
         render_im_shape=(1000, 1000),
     ):
+        if not self.initializing:
+            a = np.clip(a, self.action_space.low, self.action_space.high)
         if self.fixed_schema:
             primitive_args = a
             primitive_name = self.step_to_primitive_name[self.step_count]
@@ -598,9 +605,6 @@ class KitchenV0(robot_env.RobotEnv):
         render_mode="rgb_array",
         render_im_shape=(1000, 1000),
     ):
-        if not self.initializing:
-            a = np.clip(a, self.action_space.low, self.action_space.high)
-
         if not self.initializing:
             if render_every_step and render_mode == "rgb_array":
                 self.img_array = []
