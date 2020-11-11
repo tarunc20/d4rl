@@ -48,6 +48,7 @@ class KitchenV0(robot_env.RobotEnv):
         imwidth=64,
         imheight=64,
         fixed_schema=True,
+        action_scale=1.4,
     ):
         self.obs_dict = {}
         self.robot_noise_ratio = 0.1  # 10% as per robot_config specs
@@ -105,6 +106,7 @@ class KitchenV0(robot_env.RobotEnv):
         self.imheight = imheight
         self.num_primitives = len(self.primitive_name_to_func)
         self.fixed_schema = fixed_schema
+        self.action_scale = action_scale
         super().__init__(
             self.MODEl,
             robot=self.make_robot(
@@ -578,6 +580,7 @@ class KitchenV0(robot_env.RobotEnv):
         render_im_shape=(1000, 1000),
     ):
         if not self.initializing:
+            a = a * self.action_scale
             a = np.clip(a, self.action_space.low, self.action_space.high)
         if self.fixed_schema:
             primitive_args = a
