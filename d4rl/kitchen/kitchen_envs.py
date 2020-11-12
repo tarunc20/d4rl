@@ -6,8 +6,8 @@ from d4rl.kitchen.adept_envs.franka.kitchen_multitask_v0 import KitchenTaskRelax
 from gym.spaces.box import Box
 
 OBS_ELEMENT_INDICES = {
-    "bottom burner": np.array([11, 12]),
-    "top burner": np.array([15, 16]),
+    "bottom left burner": np.array([11, 12]),
+    "top left burner": np.array([15, 16]),
     "light switch": np.array([17, 18]),
     "slide cabinet": np.array([19]),
     "hinge cabinet": np.array([20, 21]),
@@ -15,8 +15,8 @@ OBS_ELEMENT_INDICES = {
     "kettle": np.array([23, 24, 25, 26, 27, 28, 29]),
 }
 OBS_ELEMENT_GOALS = {
-    "bottom burner": np.array([-0.88, -0.01]),
-    "top burner": np.array([-0.92, -0.01]),
+    "bottom left burner": np.array([-0.88, -0.01]),
+    "top left burner": np.array([-0.92, -0.01]),
     "light switch": np.array([-0.69, -0.05]),
     "slide cabinet": np.array([0.37]),
     "hinge cabinet": np.array([0.0, 1.45]),
@@ -64,7 +64,15 @@ class KitchenBase(KitchenTaskRelaxV1):
                     4: "open_gripper",
                     5: "no_op",
                 },
-                "top burner": {
+                "top left burner": {
+                    0: "lift",
+                    1: "angled_x_y_grasp",
+                    2: "rotate_about_y_axis",
+                    3: "no_op",
+                    4: "no_op",
+                    5: "no_op",
+                },
+                "bottom left burner": {
                     0: "lift",
                     1: "angled_x_y_grasp",
                     2: "rotate_about_y_axis",
@@ -189,7 +197,7 @@ class KitchenBase(KitchenTaskRelaxV1):
                     + delta,
                     dtype=np.float32,
                 ),
-                "top burner": Box(
+                "top left burner": Box(
                     np.array(
                         [
                             0.0,
@@ -224,6 +232,51 @@ class KitchenBase(KitchenTaskRelaxV1):
                             0.0,
                             -np.pi / 4,
                             0.55,
+                            0.0,
+                            0,
+                            0,
+                            0,
+                            0.0,
+                        ]
+                    )
+                    + delta,
+                    dtype=np.float32,
+                ),
+                "bottom left burner": Box(
+                    np.array(
+                        [
+                            0.0,
+                            0.0,
+                            0.0,
+                            0,
+                            0.55,
+                            1.1,
+                            0.0,
+                            0.0,
+                            0.0,
+                            -np.pi / 4,
+                            0.3,
+                            0.0,
+                            0,
+                            0,
+                            0,
+                            0.0,
+                        ]
+                    )
+                    - delta,
+                    np.array(
+                        [
+                            0.0,
+                            0.0,
+                            0.0,
+                            0,
+                            0.55,
+                            1.1,
+                            0.0,
+                            0.0,
+                            0.0,
+                            -np.pi / 4,
+                            0.3,
                             0.0,
                             0,
                             0,
@@ -560,8 +613,8 @@ class KitchenMicrowaveKettleLightSliderV0(KitchenBase):
     TASK_ELEMENTS = ["microwave", "kettle", "light switch", "slide cabinet"]
 
 
-class KitchenMicrowaveKettleBottomBurnerLightV0(KitchenBase):
-    TASK_ELEMENTS = ["microwave", "kettle", "bottom burner", "light switch"]
+class KitchenMicrowaveKettleBottomLeftBurnerLightV0(KitchenBase):
+    TASK_ELEMENTS = ["microwave", "kettle", "bottom left burner", "light switch"]
 
 
 class KitchenMicrowaveV0(KitchenBase):
@@ -688,18 +741,73 @@ class KitchenKettleV0(KitchenBase):
         )
 
 
-class KitchenBottomBurnerV0(KitchenBase):
-    TASK_ELEMENTS = ["bottom burner"]
+class KitchenBottomLeftBurnerV0(KitchenBase):
+    TASK_ELEMENTS = ["bottom left burner"]
 
-    def __init__(self, **kwargs):
-        super(KitchenBottomBurnerV0, self).__init__(max_steps=3, **kwargs)
+    def __init__(self, delta=0.0, **kwargs):
+        super(KitchenBottomLeftBurnerV0, self).__init__(max_steps=3, **kwargs)
+
+        self.step_to_primitive_name = {
+            0: "lift",
+            1: "angled_x_y_grasp",
+            2: "rotate_about_y_axis",
+        }
+        action_low = np.array(
+            [
+                0.0,
+                0.0,
+                0.0,
+                0,
+                0.55,
+                1.1,
+                0.0,
+                0.0,
+                0.0,
+                -np.pi / 4,
+                0.3,
+                0.0,
+                0,
+                0,
+                0,
+                0.0,
+            ]
+        )
+
+        action_high = np.array(
+            [
+                0.0,
+                0.0,
+                0.0,
+                0,
+                0.55,
+                1.1,
+                0.0,
+                0.0,
+                0.0,
+                -np.pi / 4,
+                0.3,
+                0.0,
+                0,
+                0,
+                0,
+                0.0,
+            ]
+        )
+        if not self.fixed_schema:
+            act_lower_primitive = np.zeros(self.num_primitives)
+            act_upper_primitive = np.ones(self.num_primitives)
+            action_low = np.concatenate((act_lower_primitive, action_low))
+            action_high = np.concatenate((act_upper_primitive, action_high))
+        self.action_space = Box(
+            action_low - delta, action_high + delta, dtype=np.float32
+        )
 
 
-class KitchenTopBurnerV0(KitchenBase):
-    TASK_ELEMENTS = ["top burner"]
+class KitchenTopLeftBurnerV0(KitchenBase):
+    TASK_ELEMENTS = ["top left burner"]
 
     def __init__(self, delta=0, **kwargs):
-        super(KitchenTopBurnerV0, self).__init__(max_steps=3, **kwargs)
+        super(KitchenTopLeftBurnerV0, self).__init__(max_steps=3, **kwargs)
 
         self.step_to_primitive_name = {
             0: "lift",
@@ -949,7 +1057,8 @@ class KitchenLightSwitchV0(KitchenBase):
 class KitchenMultitaskAllV0(KitchenBase):
     TASK_ELEMENTS = [
         "light switch",
-        "top burner",
+        "top left burner",
+        "bottom left burner",
         "slide cabinet",
         "hinge cabinet",
         "kettle",
