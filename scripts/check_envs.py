@@ -52,7 +52,7 @@ ENVS = [
     "antmaze-large-diverse-v0",
     "mini-kitchen-microwave-kettle-light-slider-v0",
     "kitchen-microwave-kettle-light-slider-v0",
-    "kitchen-microwave-kettle-bottomburner-light-v0",
+    "kitchen-microwave-kettle-BottomLeftBurner-light-v0",
 ]
 
 if __name__ == "__main__":
