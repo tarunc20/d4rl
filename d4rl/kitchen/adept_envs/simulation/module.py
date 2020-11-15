@@ -34,7 +34,6 @@ def get_mujoco_py():
         return _MUJOCO_PY_MODULE
     try:
         import mujoco_py
-
         # Override the warning function.
         from mujoco_py.builder import cymj
 

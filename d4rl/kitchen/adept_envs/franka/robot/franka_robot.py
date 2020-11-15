@@ -14,21 +14,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os, getpass
-import numpy as np
-from termcolor import cprint
-import time
 import copy
-import click
-
-from d4rl.kitchen.adept_envs import base_robot
-from d4rl.kitchen.adept_envs.utils.config import (
-    get_config_root_node,
-    read_config_from_node,
-)
-
+import getpass
+import os
+import time
 # obervations structure
 from collections import namedtuple
+
+import click
+import numpy as np
+from termcolor import cprint
+
+from d4rl.kitchen.adept_envs import base_robot
+from d4rl.kitchen.adept_envs.utils.config import (get_config_root_node,
+                                                  read_config_from_node)
 
 observation = namedtuple(
     "observation", ["time", "qpos_robot", "qvel_robot", "qpos_object", "qvel_object"]

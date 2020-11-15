@@ -1,16 +1,10 @@
 """Traffic Light Grid example."""
+from flow.controllers import GridRouter, SimCarFollowingController
+from flow.core.params import (EnvParams, InFlows, InitialConfig, NetParams,
+                              SumoCarFollowingParams, SumoParams,
+                              VehicleParams)
 from flow.envs import TrafficLightGridBenchmarkEnv
 from flow.networks import TrafficLightGridNetwork
-from flow.core.params import (
-    SumoParams,
-    EnvParams,
-    InitialConfig,
-    NetParams,
-    InFlows,
-    SumoCarFollowingParams,
-)
-from flow.core.params import VehicleParams
-from flow.controllers import SimCarFollowingController, GridRouter
 
 
 def gen_env(render="drgb"):

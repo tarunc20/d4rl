@@ -2,20 +2,15 @@
 Trains a a small percentage of rl vehicles to dissipate shockwaves caused by
 on-ramp merge to a single lane open highway network.
 """
+from copy import deepcopy
+
+from flow.controllers import RLController, SimCarFollowingController
+from flow.core.params import (EnvParams, InFlows, InitialConfig, NetParams,
+                              SumoCarFollowingParams, SumoParams,
+                              VehicleParams)
 from flow.envs import MergePOEnv
 from flow.networks import MergeNetwork
-from copy import deepcopy
-from flow.core.params import (
-    SumoParams,
-    EnvParams,
-    InitialConfig,
-    NetParams,
-    InFlows,
-    SumoCarFollowingParams,
-)
 from flow.networks.merge import ADDITIONAL_NET_PARAMS
-from flow.core.params import VehicleParams
-from flow.controllers import SimCarFollowingController, RLController
 
 
 def gen_env(render="drgb"):

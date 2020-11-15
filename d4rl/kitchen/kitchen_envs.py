@@ -1,9 +1,11 @@
 """Environments using kitchen and Franka robot."""
-from gym import spaces
 import numpy as np
-from d4rl.kitchen.adept_envs.utils.configurable import configurable
-from d4rl.kitchen.adept_envs.franka.kitchen_multitask_v0 import KitchenTaskRelaxV1
+from gym import spaces
 from gym.spaces.box import Box
+
+from d4rl.kitchen.adept_envs.franka.kitchen_multitask_v0 import \
+    KitchenTaskRelaxV1
+from d4rl.kitchen.adept_envs.utils.configurable import configurable
 
 OBS_ELEMENT_INDICES = {
     "bottom left burner": np.array([11, 12]),

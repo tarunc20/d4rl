@@ -2,8 +2,9 @@
 A quick script to run a sanity check on all environments.
 """
 import gym
-import d4rl
 import numpy as np
+
+import d4rl
 
 ENVS = [
     "halfcheetah-random-v0",

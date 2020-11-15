@@ -18,11 +18,12 @@ import os
 
 import mujoco_py
 import numpy as np
+import quaternion
+from dm_control.mujoco import engine
+from gym import spaces
+
 from d4rl.kitchen.adept_envs import robot_env
 from d4rl.kitchen.adept_envs.utils.configurable import configurable
-from gym import spaces
-from dm_control.mujoco import engine
-import quaternion
 
 
 @configurable(pickleable=True)
