@@ -9,12 +9,10 @@ import rlkit.torch.pytorch_util as ptu
 from rlkit.data_management.env_replay_buffer import EnvReplayBuffer
 from rlkit.envs.wrappers import NormalizedBoxEnv
 from rlkit.launchers.launcher_util import setup_logger
-from rlkit.samplers.data_collector import (CustomMDPPathCollector,
-                                           MdpPathCollector)
+from rlkit.samplers.data_collector import CustomMDPPathCollector, MdpPathCollector
 from rlkit.torch.networks import FlattenMlp
 from rlkit.torch.sac.bear import BEARTrainer
-from rlkit.torch.sac.policies import (MakeDeterministic, TanhGaussianPolicy,
-                                      VAEPolicy)
+from rlkit.torch.sac.policies import MakeDeterministic, TanhGaussianPolicy, VAEPolicy
 from rlkit.torch.torch_rl_algorithm import TorchBatchRLAlgorithm
 
 

@@ -58,7 +58,9 @@ from agents.navigation.global_route_planner import GlobalRoutePlanner
 from agents.navigation.global_route_planner_dao import GlobalRoutePlannerDAO
 from agents.navigation.local_planner import LocalPlanner
 from agents.tools.misc import (  # , is_within_distance, compute_distance
-    compute_magnitude_angle, is_within_distance_ahead)
+    compute_magnitude_angle,
+    is_within_distance_ahead,
+)
 
 
 def is_within_distance(

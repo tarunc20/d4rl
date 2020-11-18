@@ -4,9 +4,17 @@ import gym
 import gym.spaces
 import numpy as np
 
-from d4rl.pointmaze.gridcraft.grid_spec import (LAVA, RENDER_DICT, REWARD,
-                                                REWARD2, REWARD3, REWARD4,
-                                                START, TILES, WALL)
+from d4rl.pointmaze.gridcraft.grid_spec import (
+    LAVA,
+    RENDER_DICT,
+    REWARD,
+    REWARD2,
+    REWARD3,
+    REWARD4,
+    START,
+    TILES,
+    WALL,
+)
 from d4rl.pointmaze.gridcraft.utils import flat_to_one_hot, one_hot_to_flat
 
 ACT_NOOP = 0

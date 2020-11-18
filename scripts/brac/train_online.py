@@ -21,8 +21,7 @@ import os
 import gin
 import tensorflow.compat.v1 as tf
 from absl import app, flags, logging
-from behavior_regularized_offline_rl.brac import (agents, train_eval_online,
-                                                  utils)
+from behavior_regularized_offline_rl.brac import agents, train_eval_online, utils
 
 import d4rl
 import d4rl.flow

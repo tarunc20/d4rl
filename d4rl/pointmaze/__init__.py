@@ -1,7 +1,15 @@
 from gym.envs.registration import register
 
-from .maze_model import (LARGE_MAZE, LARGE_MAZE_EVAL, MEDIUM_MAZE,
-                         MEDIUM_MAZE_EVAL, OPEN, U_MAZE, U_MAZE_EVAL, MazeEnv)
+from .maze_model import (
+    LARGE_MAZE,
+    LARGE_MAZE_EVAL,
+    MEDIUM_MAZE,
+    MEDIUM_MAZE_EVAL,
+    OPEN,
+    U_MAZE,
+    U_MAZE_EVAL,
+    MazeEnv,
+)
 
 register(
     id="maze2d-open-v0",

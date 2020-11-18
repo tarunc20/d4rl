@@ -5,9 +5,15 @@ on-ramp merge to a single lane open highway network.
 from copy import deepcopy
 
 from flow.controllers import RLController, SimCarFollowingController
-from flow.core.params import (EnvParams, InFlows, InitialConfig, NetParams,
-                              SumoCarFollowingParams, SumoParams,
-                              VehicleParams)
+from flow.core.params import (
+    EnvParams,
+    InFlows,
+    InitialConfig,
+    NetParams,
+    SumoCarFollowingParams,
+    SumoParams,
+    VehicleParams,
+)
 from flow.envs import MergePOEnv
 from flow.networks import MergeNetwork
 from flow.networks.merge import ADDITIONAL_NET_PARAMS

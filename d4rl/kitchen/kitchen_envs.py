@@ -3,8 +3,7 @@ import numpy as np
 from gym import spaces
 from gym.spaces.box import Box
 
-from d4rl.kitchen.adept_envs.franka.kitchen_multitask_v0 import \
-    KitchenTaskRelaxV1
+from d4rl.kitchen.adept_envs.franka.kitchen_multitask_v0 import KitchenTaskRelaxV1
 from d4rl.kitchen.adept_envs.utils.configurable import configurable
 
 OBS_ELEMENT_INDICES = {

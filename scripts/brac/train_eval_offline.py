@@ -26,8 +26,7 @@ import numpy as np
 import tensorflow as tf0
 import tensorflow.compat.v1 as tf
 from absl import logging
-from behavior_regularized_offline_rl.brac import (dataset, train_eval_utils,
-                                                  utils)
+from behavior_regularized_offline_rl.brac import dataset, train_eval_utils, utils
 from gym.wrappers import time_limit
 from tf_agents.environments import gym_wrapper, tf_py_environment
 
