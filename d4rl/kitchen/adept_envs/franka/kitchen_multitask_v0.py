@@ -50,12 +50,14 @@ class KitchenV0(robot_env.RobotEnv):
         imheight=64,
         fixed_schema=True,
         action_scale=1.4,
+        view=1,
     ):
         self.obs_dict = {}
         self.robot_noise_ratio = 0.1  # 10% as per robot_config specs
         self.goal = np.zeros((30,))
         self.max_steps = max_steps
         self.step_count = 0
+        self.view = view
         self.primitive_idx_to_name = {
             0: "goto_pose",
             1: "angled_x_y_grasp",
@@ -316,10 +318,20 @@ class KitchenV0(robot_env.RobotEnv):
             if render_every_step:
                 if render_mode == "rgb_array":
                     self.img_array.append(
-                        self.render(render_mode, render_im_shape[0], render_im_shape[1])
+                        self.render(
+                            render_mode,
+                            render_im_shape[0],
+                            render_im_shape[1],
+                            original=True,
+                        )
                     )
                 else:
-                    self.render(render_mode, render_im_shape[0], render_im_shape[1])
+                    self.render(
+                        render_mode,
+                        render_im_shape[0],
+                        render_im_shape[1],
+                        original=True,
+                    )
 
     def open_gripper(
         self,
@@ -334,10 +346,20 @@ class KitchenV0(robot_env.RobotEnv):
             if render_every_step:
                 if render_mode == "rgb_array":
                     self.img_array.append(
-                        self.render(render_mode, render_im_shape[0], render_im_shape[1])
+                        self.render(
+                            render_mode,
+                            render_im_shape[0],
+                            render_im_shape[1],
+                            original=True,
+                        )
                     )
                 else:
-                    self.render(render_mode, render_im_shape[0], render_im_shape[1])
+                    self.render(
+                        render_mode,
+                        render_im_shape[0],
+                        render_im_shape[1],
+                        original=True,
+                    )
 
     def rotate_ee(
         self,
@@ -369,10 +391,20 @@ class KitchenV0(robot_env.RobotEnv):
             if render_every_step:
                 if render_mode == "rgb_array":
                     self.img_array.append(
-                        self.render(render_mode, render_im_shape[0], render_im_shape[1])
+                        self.render(
+                            render_mode,
+                            render_im_shape[0],
+                            render_im_shape[1],
+                            original=True,
+                        )
                     )
                 else:
-                    self.render(render_mode, render_im_shape[0], render_im_shape[1])
+                    self.render(
+                        render_mode,
+                        render_im_shape[0],
+                        render_im_shape[1],
+                        original=True,
+                    )
 
     def goto_pose(
         self,
@@ -404,10 +436,20 @@ class KitchenV0(robot_env.RobotEnv):
             if render_every_step:
                 if render_mode == "rgb_array":
                     self.img_array.append(
-                        self.render(render_mode, render_im_shape[0], render_im_shape[1])
+                        self.render(
+                            render_mode,
+                            render_im_shape[0],
+                            render_im_shape[1],
+                            original=True,
+                        )
                     )
                 else:
-                    self.render(render_mode, render_im_shape[0], render_im_shape[1])
+                    self.render(
+                        render_mode,
+                        render_im_shape[0],
+                        render_im_shape[1],
+                        original=True,
+                    )
 
     def angled_x_y_grasp(
         self,
@@ -719,7 +761,7 @@ class KitchenTaskRelaxV1(KitchenV0):
         score = 0.0
         return reward_dict, score
 
-    def render(self, mode="human", imwidth=None, imheight=None):
+    def render(self, mode="human", imwidth=None, imheight=None, original=False):
         if mode == "rgb_array":
             if self.sim_robot._use_dm_backend:
                 camera = engine.MovableCamera(self.sim, imwidth, imheight)
@@ -732,7 +774,29 @@ class KitchenTaskRelaxV1(KitchenV0):
                     imwidth = self.imwidth
                 if not imheight:
                     imheight = self.imheight
-                img = self.sim_robot.renderer.render_offscreen(imwidth, imheight)
+                if original:
+                    img = self.sim_robot.renderer.render_offscreen(imwidth, imheight)
+                else:
+                    if self.view == 1:
+                        img = self.sim_robot.renderer.render_offscreen(
+                            imwidth, imheight
+                        )
+                    elif self.view == 2:
+                        img = self.sim_robot.renderer.render_offscreen(
+                            imwidth + imwidth // 4, imheight + imwidth // 4
+                        )
+                        img = img[
+                            :imwidth,
+                            :imheight,
+                        ]
+                    else:
+                        img = self.sim_robot.renderer.render_offscreen(
+                            imwidth + imwidth // 2, imheight + imheight // 2
+                        )
+                        img = img[
+                            imwidth // 6 : imwidth // 6 + imwidth,
+                            1 * imheight // 6 : 1 * imheight // 6 + imheight,
+                        ]
             return img
         else:
             super(KitchenTaskRelaxV1, self).render(mode=mode)
