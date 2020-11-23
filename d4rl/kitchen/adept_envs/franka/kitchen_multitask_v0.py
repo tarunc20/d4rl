@@ -112,6 +112,14 @@ class KitchenV0(robot_env.RobotEnv):
         self.num_primitives = len(self.primitive_name_to_func)
         self.fixed_schema = fixed_schema
         self.action_scale = action_scale
+        self.min_ee_pos = np.array([-1, -0.5, 1.5])
+        self.max_ee_pos = np.array([0.5, 1, 3])
+        self.num_decimals_for_coverage_grid = 2
+        max_delta = self.max_ee_pos - self.min_ee_pos
+        grid_size = (max_delta * 10 ** self.num_decimals_for_coverage_grid).astype(int)
+        self.coverage_grid = np.zeros(
+            (grid_size[0], grid_size[1], grid_size[2]), dtype=np.uint8
+        )
         super().__init__(
             self.MODEl,
             robot=self.make_robot(
@@ -273,6 +281,17 @@ class KitchenV0(robot_env.RobotEnv):
 
     def _set_action(self, action):
         assert action.shape == (9,)
+
+        # update coverage grid
+        xpos = self.get_ee_pose()
+        xpos_rounded = np.around(xpos, self.num_decimals_for_coverage_grid)
+        delta = xpos_rounded - self.min_ee_pos
+        indices = (delta * 10 ** (self.num_decimals_for_coverage_grid)).astype(int)
+        indices = np.clip(
+            indices, 0, self.coverage_grid.shape[0] - 1
+        )  # make sure all valid indices, clip any to min/max of range
+        self.coverage_grid[indices[0]][indices[1]][indices[2]] = 1
+
         action = action.copy()
         pos_ctrl, rot_ctrl, gripper_ctrl = action[:3], action[3:7], action[7:9]
 

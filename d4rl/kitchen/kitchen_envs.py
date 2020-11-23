@@ -607,6 +607,9 @@ class KitchenBase(KitchenTaskRelaxV1):
             info[element + " distance to goal"] = distance
             info[element + " success"] = float(distance < BONUS_THRESH)
             info["success"] = float(distance < BONUS_THRESH)
+        info["coverage"] = self.coverage_grid.sum() / (
+            np.prod(self.coverage_grid.shape)
+        )
         return info
 
 
