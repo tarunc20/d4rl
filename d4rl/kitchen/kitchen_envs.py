@@ -610,6 +610,10 @@ class KitchenBase(KitchenTaskRelaxV1):
         info["coverage"] = self.coverage_grid.sum() / (
             np.prod(self.coverage_grid.shape)
         )
+        for object_site in self.object_interaction_counts_dict.keys():
+            info[
+                "Object Site: " + object_site + " Interaction Count"
+            ] = self.object_interaction_counts_dict[object_site]
         return info
 
 

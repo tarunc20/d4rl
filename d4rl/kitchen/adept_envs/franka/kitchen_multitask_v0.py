@@ -120,6 +120,33 @@ class KitchenV0(robot_env.RobotEnv):
         self.coverage_grid = np.zeros(
             (grid_size[0], grid_size[1], grid_size[2]), dtype=np.uint8
         )
+        self.object_sites = [
+            "knob1_site",
+            "knob2_site",
+            "knob3_site",
+            "knob4_site",
+            "light_site",
+            "slide_site",
+            "hinge_site1",
+            "hinge_site2",
+            "microhandle_site",
+            "kettle_site",
+        ]
+        self.object_interaction_counts_dict = {}
+        self.object_interaction_tolerance_dict = {
+            "knob1_site": 0,
+            "knob2_site": 0.04,
+            "knob3_site": 0.0,
+            "knob4_site": 0.04,
+            "light_site": 0.04,
+            "slide_site": 0.04,
+            "hinge_site1": 0.15,
+            "hinge_site2": 0.15,
+            "microhandle_site": 0.075,
+            "kettle_site": 0.125,
+        }
+        for object_site in self.object_sites:
+            self.object_interaction_counts_dict[object_site] = 0.0
         super().__init__(
             self.MODEl,
             robot=self.make_robot(
@@ -282,16 +309,6 @@ class KitchenV0(robot_env.RobotEnv):
     def _set_action(self, action):
         assert action.shape == (9,)
 
-        # update coverage grid
-        xpos = self.get_ee_pose()
-        xpos_rounded = np.around(xpos, self.num_decimals_for_coverage_grid)
-        delta = xpos_rounded - self.min_ee_pos
-        indices = (delta * 10 ** (self.num_decimals_for_coverage_grid)).astype(int)
-        indices = np.clip(
-            indices, 0, self.coverage_grid.shape[0] - 1
-        )  # make sure all valid indices, clip any to min/max of range
-        self.coverage_grid[indices[0]][indices[1]][indices[2]] = 1
-
         action = action.copy()
         pos_ctrl, rot_ctrl, gripper_ctrl = action[:3], action[3:7], action[7:9]
 
@@ -302,6 +319,26 @@ class KitchenV0(robot_env.RobotEnv):
         # Apply action to simulation.
         self.ctrl_set_action(self.sim, action)
         self.mocap_set_action(self.sim, action)
+
+        # update coverage grid
+        xpos = self.get_ee_pose()
+        xpos_rounded = np.around(xpos, self.num_decimals_for_coverage_grid)
+        delta = xpos_rounded - self.min_ee_pos
+        indices = (delta * 10 ** (self.num_decimals_for_coverage_grid)).astype(int)
+        indices = np.clip(
+            indices, 0, self.coverage_grid.shape[0] - 1
+        )  # make sure all valid indices, clip any to min/max of range
+        self.coverage_grid[indices[0]][indices[1]][indices[2]] = 1
+
+        # object site interactions
+        for object_site in self.object_interaction_counts_dict.keys():
+            object_pos = self.get_site_xpos(object_site)
+            delta = xpos - object_pos
+            self.object_interaction_counts_dict[object_site] += int(
+                np.linalg.norm(delta)
+                <= self.object_interaction_tolerance_dict[object_site]
+            )
+            # print(np.linalg.norm(delta))
 
     def get_ee_pose(self):
         return self.get_site_xpos("end_effector")
