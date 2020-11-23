@@ -450,9 +450,9 @@ class KitchenBase(KitchenTaskRelaxV1):
             combined_action_space_high = (
                 np.array(
                     [
-                        -0.0,
-                        -0.0,
-                        -0.0,
+                        0.0,
+                        0.0,
+                        0.0,
                         0.52359879,
                         0.69999999,
                         1.39999998,
