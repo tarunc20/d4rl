@@ -424,56 +424,7 @@ class KitchenBase(KitchenTaskRelaxV1):
                     dtype=np.float32,
                 ),
             }
-            combined_action_space_low = (
-                np.array(
-                    [
-                        0.0,
-                        0.0,
-                        0.0,
-                        -0.52359879,
-                        -0.34999999,
-                        0.0,
-                        0.0,
-                        -0.5,
-                        0.0,
-                        -0.78539819,
-                        0.0,
-                        0.0,
-                        0.0,
-                        0.0,
-                        0.0,
-                        0.0,
-                    ]
-                )
-                - delta
-            )
-            combined_action_space_high = (
-                np.array(
-                    [
-                        0.0,
-                        0.0,
-                        0.0,
-                        0.52359879,
-                        0.69999999,
-                        1.39999998,
-                        0.5,
-                        1.10000002,
-                        0.25,
-                        -0.0,
-                        1.0,
-                        0.5,
-                        0.44999999,
-                        1.0,
-                        1.25,
-                        0.60000002,
-                    ]
-                )
-                + delta
-            )
-            self.combined_action_space = Box(
-                combined_action_space_low, combined_action_space_high, dtype=np.float32
-            )
-            self.use_combined_action_space = use_combined_action_space
+
             self.num_tasks = len(self.TASK_ELEMENTS)
             self.one_hot_task = np.zeros(self.num_tasks)
             obs_upper_old = self.observation_space.high
@@ -486,6 +437,58 @@ class KitchenBase(KitchenTaskRelaxV1):
                 obs_lower,
                 obs_upper,
             )
+        combined_action_space_low = (
+            np.array(
+                [
+                    0.0,
+                    0.0,
+                    0.0,
+                    -0.52359879,
+                    -0.34999999,
+                    0.0,
+                    0.0,
+                    -0.5,
+                    0.0,
+                    -0.78539819,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                ]
+            )
+            - delta
+        )
+        combined_action_space_high = (
+            np.array(
+                [
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.52359879,
+                    0.69999999,
+                    1.39999998,
+                    0.5,
+                    1.10000002,
+                    0.25,
+                    0.0,
+                    1.0,
+                    0.5,
+                    0.44999999,
+                    1.0,
+                    1.25,
+                    0.60000002,
+                ]
+            )
+            + delta
+        )
+        self.combined_action_space = Box(
+            combined_action_space_low, combined_action_space_high, dtype=np.float32
+        )
+        self.use_combined_action_space = use_combined_action_space
+        if self.use_combined_action_space:
+            self.action_space = self.combined_action_space
 
     def _get_obs(self):
         t, qp, qv, obj_qp, obj_qv = self.robot.get_obs(
@@ -635,55 +638,56 @@ class KitchenMicrowaveV0(KitchenBase):
             1: "angled_x_y_grasp",
             2: "move_backward",
         }
-        action_low = np.array(
-            [
-                0.0,
-                0.0,
-                0.0,
-                -np.pi / 6,
-                -0.25,
-                0.9,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0.5,
-                0,
-                0,
-                0,
-                0.6,
-            ]
-        )
+        if not self.use_combined_action_space:
+            action_low = np.array(
+                [
+                    0.0,
+                    0.0,
+                    0.0,
+                    -np.pi / 6,
+                    -0.25,
+                    0.9,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0.5,
+                    0,
+                    0,
+                    0,
+                    0.6,
+                ]
+            )
 
-        action_high = np.array(
-            [
-                0.0,
-                0.0,
-                0.0,
-                -np.pi / 6,
-                -0.25,
-                0.9,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0.5,
-                0,
-                0,
-                0,
-                0.6,
-            ]
-        )
-        if not self.fixed_schema:
-            act_lower_primitive = np.zeros(self.num_primitives)
-            act_upper_primitive = np.ones(self.num_primitives)
-            action_low = np.concatenate((act_lower_primitive, action_low))
-            action_high = np.concatenate((act_upper_primitive, action_high))
-        self.action_space = Box(
-            action_low - delta, action_high + delta, dtype=np.float32
-        )
+            action_high = np.array(
+                [
+                    0.0,
+                    0.0,
+                    0.0,
+                    -np.pi / 6,
+                    -0.25,
+                    0.9,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0.5,
+                    0,
+                    0,
+                    0,
+                    0.6,
+                ]
+            )
+            if not self.fixed_schema:
+                act_lower_primitive = np.zeros(self.num_primitives)
+                act_upper_primitive = np.ones(self.num_primitives)
+                action_low = np.concatenate((act_lower_primitive, action_low))
+                action_high = np.concatenate((act_upper_primitive, action_high))
+            self.action_space = Box(
+                action_low - delta, action_high + delta, dtype=np.float32
+            )
 
 
 class KitchenKettleV0(KitchenBase):
@@ -698,55 +702,56 @@ class KitchenKettleV0(KitchenBase):
             3: "drop",
             4: "open_gripper",
         }
-        action_low = np.array(
-            [
-                0.0,
-                0.0,
-                0.0,
-                0,
-                0.2,
-                0.65,
-                0.25,
-                1.1,
-                0.25,
-                0,
-                0,
-                0.25,
-                0,
-                0,
-                0,
-                0.0,
-            ]
-        )
+        if not self.use_combined_action_space:
+            action_low = np.array(
+                [
+                    0.0,
+                    0.0,
+                    0.0,
+                    0,
+                    0.2,
+                    0.65,
+                    0.25,
+                    1.1,
+                    0.25,
+                    0,
+                    0,
+                    0.25,
+                    0,
+                    0,
+                    0,
+                    0.0,
+                ]
+            )
 
-        action_high = np.array(
-            [
-                0.0,
-                0.0,
-                0.0,
-                0,
-                0.2,
-                0.65,
-                0.25,
-                1.1,
-                0.25,
-                0,
-                0,
-                0.5,
-                0,
-                0,
-                0,
-                0.0,
-            ]
-        )
-        if not self.fixed_schema:
-            act_lower_primitive = np.zeros(self.num_primitives)
-            act_upper_primitive = np.ones(self.num_primitives)
-            action_low = np.concatenate((act_lower_primitive, action_low))
-            action_high = np.concatenate((act_upper_primitive, action_high))
-        self.action_space = Box(
-            action_low - delta, action_high + delta, dtype=np.float32
-        )
+            action_high = np.array(
+                [
+                    0.0,
+                    0.0,
+                    0.0,
+                    0,
+                    0.2,
+                    0.65,
+                    0.25,
+                    1.1,
+                    0.25,
+                    0,
+                    0,
+                    0.5,
+                    0,
+                    0,
+                    0,
+                    0.0,
+                ]
+            )
+            if not self.fixed_schema:
+                act_lower_primitive = np.zeros(self.num_primitives)
+                act_upper_primitive = np.ones(self.num_primitives)
+                action_low = np.concatenate((act_lower_primitive, action_low))
+                action_high = np.concatenate((act_upper_primitive, action_high))
+            self.action_space = Box(
+                action_low - delta, action_high + delta, dtype=np.float32
+            )
 
 
 class KitchenBottomLeftBurnerV0(KitchenBase):
@@ -760,55 +765,56 @@ class KitchenBottomLeftBurnerV0(KitchenBase):
             1: "angled_x_y_grasp",
             2: "rotate_about_y_axis",
         }
-        action_low = np.array(
-            [
-                0.0,
-                0.0,
-                0.0,
-                0,
-                0.55,
-                1.1,
-                0.0,
-                0.0,
-                0.0,
-                -np.pi / 4,
-                0.3,
-                0.0,
-                0,
-                0,
-                0,
-                0.0,
-            ]
-        )
+        if not self.use_combined_action_space:
+            action_low = np.array(
+                [
+                    0.0,
+                    0.0,
+                    0.0,
+                    0,
+                    0.55,
+                    1.1,
+                    0.0,
+                    0.0,
+                    0.0,
+                    -np.pi / 4,
+                    0.3,
+                    0.0,
+                    0,
+                    0,
+                    0,
+                    0.0,
+                ]
+            )
 
-        action_high = np.array(
-            [
-                0.0,
-                0.0,
-                0.0,
-                0,
-                0.55,
-                1.1,
-                0.0,
-                0.0,
-                0.0,
-                -np.pi / 4,
-                0.3,
-                0.0,
-                0,
-                0,
-                0,
-                0.0,
-            ]
-        )
-        if not self.fixed_schema:
-            act_lower_primitive = np.zeros(self.num_primitives)
-            act_upper_primitive = np.ones(self.num_primitives)
-            action_low = np.concatenate((act_lower_primitive, action_low))
-            action_high = np.concatenate((act_upper_primitive, action_high))
-        self.action_space = Box(
-            action_low - delta, action_high + delta, dtype=np.float32
-        )
+            action_high = np.array(
+                [
+                    0.0,
+                    0.0,
+                    0.0,
+                    0,
+                    0.55,
+                    1.1,
+                    0.0,
+                    0.0,
+                    0.0,
+                    -np.pi / 4,
+                    0.3,
+                    0.0,
+                    0,
+                    0,
+                    0,
+                    0.0,
+                ]
+            )
+            if not self.fixed_schema:
+                act_lower_primitive = np.zeros(self.num_primitives)
+                act_upper_primitive = np.ones(self.num_primitives)
+                action_low = np.concatenate((act_lower_primitive, action_low))
+                action_high = np.concatenate((act_upper_primitive, action_high))
+            self.action_space = Box(
+                action_low - delta, action_high + delta, dtype=np.float32
+            )
 
 
 class KitchenTopLeftBurnerV0(KitchenBase):
@@ -822,55 +828,56 @@ class KitchenTopLeftBurnerV0(KitchenBase):
             1: "angled_x_y_grasp",
             2: "rotate_about_y_axis",
         }
-        action_low = np.array(
-            [
-                0.0,
-                0.0,
-                0.0,
-                0,
-                0.5,
-                1.1,
-                0.0,
-                0.0,
-                0.0,
-                -np.pi / 4,
-                0.55,
-                0.0,
-                0,
-                0,
-                0,
-                0.0,
-            ]
-        )
+        if not self.use_combined_action_space:
+            action_low = np.array(
+                [
+                    0.0,
+                    0.0,
+                    0.0,
+                    0,
+                    0.5,
+                    1.1,
+                    0.0,
+                    0.0,
+                    0.0,
+                    -np.pi / 4,
+                    0.55,
+                    0.0,
+                    0,
+                    0,
+                    0,
+                    0.0,
+                ]
+            )
 
-        action_high = np.array(
-            [
-                0.0,
-                0.0,
-                0.0,
-                0,
-                0.5,
-                1.1,
-                0.0,
-                0.0,
-                0.0,
-                -np.pi / 4,
-                0.55,
-                0.0,
-                0,
-                0,
-                0,
-                0.0,
-            ]
-        )
-        if not self.fixed_schema:
-            act_lower_primitive = np.zeros(self.num_primitives)
-            act_upper_primitive = np.ones(self.num_primitives)
-            action_low = np.concatenate((act_lower_primitive, action_low))
-            action_high = np.concatenate((act_upper_primitive, action_high))
-        self.action_space = Box(
-            action_low - delta, action_high + delta, dtype=np.float32
-        )
+            action_high = np.array(
+                [
+                    0.0,
+                    0.0,
+                    0.0,
+                    0,
+                    0.5,
+                    1.1,
+                    0.0,
+                    0.0,
+                    0.0,
+                    -np.pi / 4,
+                    0.55,
+                    0.0,
+                    0,
+                    0,
+                    0,
+                    0.0,
+                ]
+            )
+            if not self.fixed_schema:
+                act_lower_primitive = np.zeros(self.num_primitives)
+                act_upper_primitive = np.ones(self.num_primitives)
+                action_low = np.concatenate((act_lower_primitive, action_low))
+                action_high = np.concatenate((act_upper_primitive, action_high))
+            self.action_space = Box(
+                action_low - delta, action_high + delta, dtype=np.float32
+            )
 
 
 class KitchenSlideCabinetV0(KitchenBase):
@@ -883,55 +890,56 @@ class KitchenSlideCabinetV0(KitchenBase):
             1: "angled_x_y_grasp",
             2: "move_right",
         }
-        action_low = np.array(
-            [
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.7,
-                1.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                1,
-                0.0,
-                0.0,
-                0.6,
-                0.0,
-                0.0,
-            ]
-        )
+        if not self.use_combined_action_space:
+            action_low = np.array(
+                [
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.7,
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1,
+                    0.0,
+                    0.0,
+                    0.6,
+                    0.0,
+                    0.0,
+                ]
+            )
 
-        action_high = np.array(
-            [
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.7,
-                1.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                1,
-                0.0,
-                0.0,
-                0.6,
-                0.0,
-                0.0,
-            ]
-        )
-        if not self.fixed_schema:
-            act_lower_primitive = np.zeros(self.num_primitives)
-            act_upper_primitive = np.ones(self.num_primitives)
-            action_low = np.concatenate((act_lower_primitive, action_low))
-            action_high = np.concatenate((act_upper_primitive, action_high))
-        self.action_space = Box(
-            action_low - delta, action_high + delta, dtype=np.float32
-        )
+            action_high = np.array(
+                [
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.7,
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1,
+                    0.0,
+                    0.0,
+                    0.6,
+                    0.0,
+                    0.0,
+                ]
+            )
+            if not self.fixed_schema:
+                act_lower_primitive = np.zeros(self.num_primitives)
+                act_upper_primitive = np.ones(self.num_primitives)
+                action_low = np.concatenate((act_lower_primitive, action_low))
+                action_high = np.concatenate((act_upper_primitive, action_high))
+            self.action_space = Box(
+                action_low - delta, action_high + delta, dtype=np.float32
+            )
 
 
 class KitchenHingeCabinetV0(KitchenBase):
@@ -948,55 +956,56 @@ class KitchenHingeCabinetV0(KitchenBase):
             4: "angled_x_y_grasp",
             5: "move_right",
         }
-        action_low = np.array(
-            [
-                0.0,
-                0.0,
-                0.0,
-                -np.pi / 6,
-                -0.35,
-                0.1,
-                0.5,
-                -0.5,
-                0.0,
-                0.0,
-                1,
-                0.0,
-                0,
-                1,
-                0,
-                0.25,
-            ]
-        )
+        if not self.use_combined_action_space:
+            action_low = np.array(
+                [
+                    0.0,
+                    0.0,
+                    0.0,
+                    -np.pi / 6,
+                    -0.35,
+                    0.1,
+                    0.5,
+                    -0.5,
+                    0.0,
+                    0.0,
+                    1,
+                    0.0,
+                    0,
+                    1,
+                    0,
+                    0.25,
+                ]
+            )
 
-        action_high = np.array(
-            [
-                0.0,
-                0.0,
-                0.0,
-                np.pi / 6,
-                -0.35,
-                1.4,
-                0.5,
-                -0.5,
-                0.0,
-                0.0,
-                1,
-                0.0,
-                0,
-                1,
-                0,
-                0.25,
-            ]
-        )
-        if not self.fixed_schema:
-            act_lower_primitive = np.zeros(self.num_primitives)
-            act_upper_primitive = np.ones(self.num_primitives)
-            action_low = np.concatenate((act_lower_primitive, action_low))
-            action_high = np.concatenate((act_upper_primitive, action_high))
-        self.action_space = Box(
-            action_low - delta, action_high + delta, dtype=np.float32
-        )
+            action_high = np.array(
+                [
+                    0.0,
+                    0.0,
+                    0.0,
+                    np.pi / 6,
+                    -0.35,
+                    1.4,
+                    0.5,
+                    -0.5,
+                    0.0,
+                    0.0,
+                    1,
+                    0.0,
+                    0,
+                    1,
+                    0,
+                    0.25,
+                ]
+            )
+            if not self.fixed_schema:
+                act_lower_primitive = np.zeros(self.num_primitives)
+                act_upper_primitive = np.ones(self.num_primitives)
+                action_low = np.concatenate((act_lower_primitive, action_low))
+                action_high = np.concatenate((act_upper_primitive, action_high))
+            self.action_space = Box(
+                action_low - delta, action_high + delta, dtype=np.float32
+            )
 
 
 class KitchenLightSwitchV0(KitchenBase):
@@ -1011,55 +1020,56 @@ class KitchenLightSwitchV0(KitchenBase):
             3: "move_forward",
             4: "move_left",
         }
-        action_low = np.array(
-            [
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.45,
-                0.0,
-                0.45,
-                0.45,
-                1.25,
-                0.0,
-            ]
-        )
+        if not self.use_combined_action_space:
+            action_low = np.array(
+                [
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.45,
+                    0.0,
+                    0.45,
+                    0.45,
+                    1.25,
+                    0.0,
+                ]
+            )
 
-        action_high = np.array(
-            [
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.45,
-                0.0,
-                0.45,
-                0.45,
-                1.25,
-                0.0,
-            ]
-        )
-        if not self.fixed_schema:
-            act_lower_primitive = np.zeros(self.num_primitives)
-            act_upper_primitive = np.ones(self.num_primitives)
-            action_low = np.concatenate((act_lower_primitive, action_low))
-            action_high = np.concatenate((act_upper_primitive, action_high))
-        self.action_space = Box(
-            action_low - delta, action_high + delta, dtype=np.float32
-        )
+            action_high = np.array(
+                [
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.45,
+                    0.0,
+                    0.45,
+                    0.45,
+                    1.25,
+                    0.0,
+                ]
+            )
+            if not self.fixed_schema:
+                act_lower_primitive = np.zeros(self.num_primitives)
+                act_upper_primitive = np.ones(self.num_primitives)
+                action_low = np.concatenate((act_lower_primitive, action_low))
+                action_high = np.concatenate((act_upper_primitive, action_high))
+            self.action_space = Box(
+                action_low - delta, action_high + delta, dtype=np.float32
+            )
 
 
 class KitchenMultitaskAllV0(KitchenBase):
