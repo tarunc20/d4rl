@@ -518,10 +518,16 @@ class KitchenBase(KitchenTaskRelaxV1):
         if self.image_obs:
             img = self.render(mode="rgb_array")
             img = img.transpose(2, 0, 1).flatten()
+            if self.proprioception:
+                if not self.initializing:
+                    return np.concatenate((img, self.obs_dict["qp"]))
+                else:
+                    return img
             if not self.initializing and self.multitask:
                 return np.concatenate((img, self.one_hot_task))
             else:
                 return img
+
         else:
             return np.concatenate(
                 [self.obs_dict["qp"], self.obs_dict["obj_qp"], self.obs_dict["goal"]]

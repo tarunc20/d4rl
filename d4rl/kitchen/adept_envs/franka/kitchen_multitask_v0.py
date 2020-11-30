@@ -53,6 +53,7 @@ class KitchenV0(robot_env.RobotEnv):
         view=1,
         use_wrist_cam=False,
         wrist_cam_concat_with_fixed_view=False,
+        proprioception=False,
     ):
         self.obs_dict = {}
         self.robot_noise_ratio = 0.1  # 10% as per robot_config specs
@@ -149,6 +150,7 @@ class KitchenV0(robot_env.RobotEnv):
         }
         for object_site in self.object_sites:
             self.object_interaction_counts_dict[object_site] = 0.0
+        self.proprioception = proprioception
         super().__init__(
             self.MODEl,
             robot=self.make_robot(
@@ -233,6 +235,16 @@ class KitchenV0(robot_env.RobotEnv):
             self.observation_space = spaces.Box(
                 0, 255, (self.imlength,), dtype=np.uint8
             )
+            if self.proprioception:
+                obs_upper = 8.0 * np.ones(9)
+                obs_lower = -obs_upper
+                low = np.concatenate((np.zeros(self.imlength), obs_lower))
+                high = np.concatenate((np.ones(self.imlength), obs_upper))
+                self.observation_space = spaces.Box(
+                    low,
+                    high,
+                    dtype=np.float32,
+                )
 
     def get_idx_from_primitive_name(self, primitive_name):
         for idx, pn in self.primitive_idx_to_name.items():
