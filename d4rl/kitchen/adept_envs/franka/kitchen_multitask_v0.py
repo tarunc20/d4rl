@@ -209,13 +209,13 @@ class KitchenV0(robot_env.RobotEnv):
 
         self.init_qvel = self.sim.model.key_qvel[0].copy()
 
-        act_lower = -1.5 * np.ones((16,))
-        act_upper = 1.5 * np.ones((16,))
+        act_lower = -action_scale * np.ones((16,))
+        act_upper = action_scale * np.ones((16,))
         if not self.fixed_schema:
             act_lower_primitive = np.zeros(self.num_primitives)
             act_upper_primitive = np.ones(self.num_primitives)
-            act_lower = np.concatenate((act_lower, act_lower_primitive))
-            act_upper = np.concatenate((act_upper, act_upper_primitive))
+            act_lower = np.concatenate((act_lower_primitive, act_lower))
+            act_upper = np.concatenate((act_upper_primitive, act_upper))
         self.action_space = spaces.Box(act_lower, act_upper, dtype=np.float32)
 
         obs_upper = 8.0 * np.ones(self.obs_dim)
