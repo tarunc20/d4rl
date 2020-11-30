@@ -52,6 +52,7 @@ class KitchenV0(robot_env.RobotEnv):
         action_scale=1.4,
         view=1,
         use_wrist_cam=False,
+        wrist_cam_concat_with_fixed_view=False,
     ):
         self.obs_dict = {}
         self.robot_noise_ratio = 0.1  # 10% as per robot_config specs
@@ -60,6 +61,7 @@ class KitchenV0(robot_env.RobotEnv):
         self.step_count = 0
         self.view = view
         self.use_wrist_cam = use_wrist_cam
+        self.wrist_cam_concat_with_fixed_view = wrist_cam_concat_with_fixed_view
         self.primitive_idx_to_name = {
             0: "goto_pose",
             1: "angled_x_y_grasp",
@@ -222,6 +224,12 @@ class KitchenV0(robot_env.RobotEnv):
         if self.image_obs:
             self.imlength = imwidth * imheight
             self.imlength *= 3
+            if self.wrist_cam_concat_with_fixed_view:
+                self.imlength *= 2
+                self.image_shape = (6, imheight, imwidth)
+            else:
+                self.image_shape = (3, imheight, imwidth)
+
             self.observation_space = spaces.Box(
                 0, 255, (self.imlength,), dtype=np.uint8
             )
@@ -832,40 +840,52 @@ class KitchenTaskRelaxV1(KitchenV0):
                     imwidth = self.imwidth
                 if not imheight:
                     imheight = self.imheight
-                if original:
-                    img = self.sim_robot.renderer.render_offscreen(
+                if self.wrist_cam_concat_with_fixed_view:
+                    img1 = self.sim_robot.renderer.render_offscreen(
                         imwidth,
                         imheight,
                     )
+                    img2 = self.sim_robot.renderer.render_offscreen(
+                        imwidth,
+                        imheight,
+                        camera_id=self.sim.model.camera_name2id("gripperPOV"),
+                    )
+                    img = np.concatenate((img1, img2), axis=-1)
                 else:
-                    if self.use_wrist_cam:
+                    if original:
                         img = self.sim_robot.renderer.render_offscreen(
                             imwidth,
                             imheight,
-                            camera_id=self.sim.model.camera_name2id("gripperPOV"),
                         )
                     else:
-                        if self.view == 1:
+                        if self.use_wrist_cam:
                             img = self.sim_robot.renderer.render_offscreen(
                                 imwidth,
                                 imheight,
+                                camera_id=self.sim.model.camera_name2id("gripperPOV"),
                             )
-                        elif self.view == 2:
-                            img = self.sim_robot.renderer.render_offscreen(
-                                imwidth + imwidth // 4, imheight + imwidth // 4
-                            )
-                            img = img[
-                                :imwidth,
-                                :imheight,
-                            ]
                         else:
-                            img = self.sim_robot.renderer.render_offscreen(
-                                imwidth + imwidth // 2, imheight + imheight // 2
-                            )
-                            img = img[
-                                imwidth // 6 : imwidth // 6 + imwidth,
-                                1 * imheight // 6 : 1 * imheight // 6 + imheight,
-                            ]
+                            if self.view == 1:
+                                img = self.sim_robot.renderer.render_offscreen(
+                                    imwidth,
+                                    imheight,
+                                )
+                            elif self.view == 2:
+                                img = self.sim_robot.renderer.render_offscreen(
+                                    imheight + imheight // 4, imwidth + imwidth // 4
+                                )
+                                img = img[
+                                    :imwidth,
+                                    :imheight,
+                                ]
+                            else:
+                                img = self.sim_robot.renderer.render_offscreen(
+                                    imheight + imheight // 2, imwidth + imwidth // 2
+                                )
+                                img = img[
+                                    imheight // 6 : imheight // 6 + imheight,
+                                    1 * imwidth // 6 : 1 * imwidth // 6 + imwidth,
+                                ]
             return img
         else:
             super(KitchenTaskRelaxV1, self).render(mode=mode)
