@@ -54,6 +54,7 @@ class KitchenV0(robot_env.RobotEnv):
         use_wrist_cam=False,
         wrist_cam_concat_with_fixed_view=False,
         proprioception=False,
+        start_image_concat_with_image_obs=False,
     ):
         self.obs_dict = {}
         self.robot_noise_ratio = 0.1  # 10% as per robot_config specs
@@ -63,6 +64,7 @@ class KitchenV0(robot_env.RobotEnv):
         self.view = view
         self.use_wrist_cam = use_wrist_cam
         self.wrist_cam_concat_with_fixed_view = wrist_cam_concat_with_fixed_view
+        self.start_image_concat_with_image_obs = start_image_concat_with_image_obs
         self.primitive_idx_to_name = {
             0: "goto_pose",
             1: "angled_x_y_grasp",
@@ -226,7 +228,10 @@ class KitchenV0(robot_env.RobotEnv):
         if self.image_obs:
             self.imlength = imwidth * imheight
             self.imlength *= 3
-            if self.wrist_cam_concat_with_fixed_view:
+            if (
+                self.wrist_cam_concat_with_fixed_view
+                or self.start_image_concat_with_image_obs
+            ):
                 self.imlength *= 2
                 self.image_shape = (6, imheight, imwidth)
             else:
@@ -782,6 +787,10 @@ class KitchenV0(robot_env.RobotEnv):
         self.sim.forward()
         self.goal = self._get_task_goal()  # sample a new goal on reset
         self.step_count = 0
+        self.start_img = self.sim_robot.renderer.render_offscreen(
+            self.imwidth,
+            self.imheight,
+        )
         return self._get_obs()
 
     def evaluate_success(self, paths):
@@ -863,6 +872,12 @@ class KitchenTaskRelaxV1(KitchenV0):
                         camera_id=self.sim.model.camera_name2id("gripperPOV"),
                     )
                     img = np.concatenate((img1, img2), axis=-1)
+                elif self.start_image_concat_with_image_obs and not self.initializing:
+                    img = self.sim_robot.renderer.render_offscreen(
+                        imwidth,
+                        imheight,
+                    )
+                    img = np.concatenate((img, self.start_img))
                 else:
                     if original:
                         img = self.sim_robot.renderer.render_offscreen(
