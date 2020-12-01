@@ -655,7 +655,7 @@ class KitchenMicrowaveV0(KitchenBase):
             1: "angled_x_y_grasp",
             2: "move_backward",
         }
-        if not self.use_combined_action_space:
+        if not self.use_combined_action_space and not self.use_max_bound_action_space:
             action_low = np.array(
                 [
                     0.0,
@@ -719,7 +719,7 @@ class KitchenKettleV0(KitchenBase):
             3: "drop",
             4: "open_gripper",
         }
-        if not self.use_combined_action_space:
+        if not self.use_combined_action_space and not self.use_max_bound_action_space:
             action_low = np.array(
                 [
                     0.0,
@@ -782,7 +782,7 @@ class KitchenBottomLeftBurnerV0(KitchenBase):
             1: "angled_x_y_grasp",
             2: "rotate_about_y_axis",
         }
-        if not self.use_combined_action_space:
+        if not self.use_combined_action_space and not self.use_max_bound_action_space:
             action_low = np.array(
                 [
                     0.0,
@@ -845,7 +845,7 @@ class KitchenTopLeftBurnerV0(KitchenBase):
             1: "angled_x_y_grasp",
             2: "rotate_about_y_axis",
         }
-        if not self.use_combined_action_space:
+        if not self.use_combined_action_space and not self.use_max_bound_action_space:
             action_low = np.array(
                 [
                     0.0,
@@ -907,7 +907,7 @@ class KitchenSlideCabinetV0(KitchenBase):
             1: "angled_x_y_grasp",
             2: "move_right",
         }
-        if not self.use_combined_action_space:
+        if not self.use_combined_action_space and not self.use_max_bound_action_space:
             action_low = np.array(
                 [
                     0.0,
@@ -973,7 +973,7 @@ class KitchenHingeCabinetV0(KitchenBase):
             4: "angled_x_y_grasp",
             5: "move_right",
         }
-        if not self.use_combined_action_space:
+        if not self.use_combined_action_space and not self.use_max_bound_action_space:
             action_low = np.array(
                 [
                     0.0,
@@ -1037,7 +1037,7 @@ class KitchenLightSwitchV0(KitchenBase):
             3: "move_forward",
             4: "move_left",
         }
-        if not self.use_combined_action_space:
+        if not self.use_combined_action_space and not self.use_max_bound_action_space:
             action_low = np.array(
                 [
                     0.0,

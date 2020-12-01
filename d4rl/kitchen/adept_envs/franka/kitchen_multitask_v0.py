@@ -55,6 +55,7 @@ class KitchenV0(robot_env.RobotEnv):
         wrist_cam_concat_with_fixed_view=False,
         proprioception=False,
         start_image_concat_with_image_obs=False,
+        use_max_bound_action_space=False,
     ):
         self.obs_dict = {}
         self.robot_noise_ratio = 0.1  # 10% as per robot_config specs
@@ -212,15 +213,16 @@ class KitchenV0(robot_env.RobotEnv):
         )
 
         self.init_qvel = self.sim.model.key_qvel[0].copy()
-
-        act_lower = -action_scale * np.ones((16,))
-        act_upper = action_scale * np.ones((16,))
-        if not self.fixed_schema:
-            act_lower_primitive = np.zeros(self.num_primitives)
-            act_upper_primitive = np.ones(self.num_primitives)
-            act_lower = np.concatenate((act_lower_primitive, act_lower))
-            act_upper = np.concatenate((act_upper_primitive, act_upper))
-        self.action_space = spaces.Box(act_lower, act_upper, dtype=np.float32)
+        self.use_max_bound_action_space = use_max_bound_action_space
+        if self.use_max_bound_action_space:
+            act_lower = -action_scale * np.ones((16,))
+            act_upper = action_scale * np.ones((16,))
+            if not self.fixed_schema:
+                act_lower_primitive = np.zeros(self.num_primitives)
+                act_upper_primitive = np.ones(self.num_primitives)
+                act_lower = np.concatenate((act_lower_primitive, act_lower))
+                act_upper = np.concatenate((act_upper_primitive, act_upper))
+            self.action_space = spaces.Box(act_lower, act_upper, dtype=np.float32)
 
         obs_upper = 8.0 * np.ones(self.obs_dim)
         obs_lower = -obs_upper
