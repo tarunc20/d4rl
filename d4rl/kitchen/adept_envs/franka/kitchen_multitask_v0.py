@@ -863,29 +863,31 @@ class KitchenTaskRelaxV1(KitchenV0):
                     imwidth = self.imwidth
                 if not imheight:
                     imheight = self.imheight
-                if self.wrist_cam_concat_with_fixed_view:
-                    img1 = self.sim_robot.renderer.render_offscreen(
-                        imwidth,
-                        imheight,
-                    )
-                    img2 = self.sim_robot.renderer.render_offscreen(
-                        imwidth,
-                        imheight,
-                        camera_id=self.sim.model.camera_name2id("gripperPOV"),
-                    )
-                    img = np.concatenate((img1, img2), axis=-1)
-                elif self.start_image_concat_with_image_obs and not self.initializing:
+                if original:
                     img = self.sim_robot.renderer.render_offscreen(
                         imwidth,
                         imheight,
                     )
-                    img = np.concatenate((img, self.start_img))
                 else:
-                    if original:
+                    if self.wrist_cam_concat_with_fixed_view:
+                        img1 = self.sim_robot.renderer.render_offscreen(
+                            imwidth,
+                            imheight,
+                        )
+                        img2 = self.sim_robot.renderer.render_offscreen(
+                            imwidth,
+                            imheight,
+                            camera_id=self.sim.model.camera_name2id("gripperPOV"),
+                        )
+                        img = np.concatenate((img1, img2), axis=-1)
+                    elif (
+                        self.start_image_concat_with_image_obs and not self.initializing
+                    ):
                         img = self.sim_robot.renderer.render_offscreen(
                             imwidth,
                             imheight,
                         )
+                        img = np.concatenate((img, self.start_img))
                     else:
                         if self.use_wrist_cam:
                             img = self.sim_robot.renderer.render_offscreen(
