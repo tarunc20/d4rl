@@ -707,6 +707,9 @@ class KitchenV0(robot_env.RobotEnv):
         render_mode="rgb_array",
         render_im_shape=(1000, 1000),
     ):
+        if not np.any(a):
+            # all zeros should be a no-op!!!
+            return
         if not self.initializing:
             a = a * self.action_scale
             a = np.clip(a, self.action_space.low, self.action_space.high)
