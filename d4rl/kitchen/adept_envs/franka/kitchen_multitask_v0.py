@@ -853,6 +853,10 @@ class KitchenTaskRelaxV1(KitchenV0):
     def render(self, mode="human", imwidth=None, imheight=None, original=False):
         if mode == "rgb_array":
             if self.sim_robot._use_dm_backend:
+                if not imwidth:
+                    imwidth = self.imwidth
+                if not imheight:
+                    imheight = self.imheight
                 camera = engine.MovableCamera(self.sim, imwidth, imheight)
                 camera.set_pose(
                     distance=2.2, lookat=[-0.2, 0.5, 2.0], azimuth=70, elevation=-35
