@@ -107,9 +107,9 @@ class KitchenV0(robot_env.RobotEnv):
             move_right=13,
             move_forward=14,
             move_backward=15,
-            open_gripper=0,  # doesn't matter
-            close_gripper=0,  # doesn't matter
-            no_op=0,  # doesn't matter
+            open_gripper=[],  # doesn't matter
+            close_gripper=[],  # doesn't matter
+            no_op=[],  # doesn't matter
         )
         self.max_arg_len = 16
         self.image_obs = image_obs
