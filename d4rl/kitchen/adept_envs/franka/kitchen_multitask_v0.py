@@ -14,6 +14,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import copy
 import os
 
 import mujoco_py
@@ -837,6 +838,21 @@ class KitchenV0(robot_env.RobotEnv):
 
     def convert_to_active_observation(self, observation):
         return observation
+
+    def get_env_state(self):
+        joint_state = self.sim.get_state()
+        mocap_state = self.data.mocap_pos, self.data.mocap_quat
+        state = self.step_count, joint_state, mocap_state
+        return copy.deepcopy(state)
+
+    def set_env_state(self, state):
+        step_count, joint_state, mocap_state = state
+        self.sim.set_state(joint_state)
+        mocap_pos, mocap_quat = mocap_state
+        self.set_mocap_pos("mocap", mocap_pos)
+        self.set_mocap_quat("mocap", mocap_quat)
+        self.sim.forward()
+        self.step_count = step_count
 
 
 class KitchenTaskRelaxV1(KitchenV0):
