@@ -27,7 +27,7 @@ OBS_ELEMENT_GOALS = {
 BONUS_THRESH = 0.3
 
 
-@configurable(pickleable=True)
+# @configurable(pickleable=True)
 class KitchenBase(KitchenTaskRelaxV1):
     # A string of element names. The robot's task is then to modify each of
     # these elements appropriately.
@@ -443,13 +443,13 @@ class KitchenBase(KitchenTaskRelaxV1):
                     0.0,
                     0.0,
                     0.0,
-                    -0.52359879,
-                    -0.34999999,
+                    -0.5235988,
+                    -0.3,
                     0.0,
                     0.0,
                     -0.5,
                     0.0,
-                    -0.78539819,
+                    -0.7853982,
                     0.0,
                     0.0,
                     0.0,
@@ -466,19 +466,19 @@ class KitchenBase(KitchenTaskRelaxV1):
                     0.0,
                     0.0,
                     0.0,
-                    0.52359879,
-                    0.69999999,
-                    1.39999998,
+                    0.5235988,
+                    0.7,
+                    1.4,
                     0.5,
-                    1.10000002,
+                    1.1,
                     0.25,
                     0.0,
                     1.0,
-                    0.5,
-                    0.44999999,
+                    0.55,
+                    0.45,
                     1.0,
                     1.25,
-                    0.60000002,
+                    0.6,
                 ]
             )
             + delta

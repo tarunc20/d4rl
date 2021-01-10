@@ -27,7 +27,7 @@ from d4rl.kitchen.adept_envs import robot_env
 from d4rl.kitchen.adept_envs.utils.configurable import configurable
 
 
-@configurable(pickleable=True)
+# @configurable(pickleable=True)
 class KitchenV0(robot_env.RobotEnv):
 
     CALIBRATION_PATHS = {
@@ -59,7 +59,8 @@ class KitchenV0(robot_env.RobotEnv):
         use_max_bound_action_space=False,
     ):
         self.obs_dict = {}
-        self.robot_noise_ratio = 0.1  # 10% as per robot_config specs
+        # self.robot_noise_ratio = 0.1  # 10% as per robot_config specs
+        self.robot_noise_ratio = 0.0  # 10% as per robot_config specs
         self.goal = np.zeros((30,))
         self.max_steps = max_steps
         self.step_count = 0
