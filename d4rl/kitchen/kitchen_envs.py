@@ -520,7 +520,14 @@ class KitchenBase(KitchenTaskRelaxV1):
             img = img.transpose(2, 0, 1).flatten()
             if self.proprioception:
                 if not self.initializing:
-                    return np.concatenate((img, self.obs_dict["qp"]))
+                    proprioceptive_obs = np.concatenate(
+                        (
+                            qp,
+                            self.get_mocap_pos("mocap"),
+                            self.get_mocap_quat("mocap"),
+                        )
+                    )
+                    return np.concatenate((img, proprioceptive_obs))
                 else:
                     return img
             if not self.initializing and self.multitask:

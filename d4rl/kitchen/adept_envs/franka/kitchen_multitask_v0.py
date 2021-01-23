@@ -17,6 +17,7 @@
 import copy
 import os
 
+import cv2
 import mujoco_py
 import numpy as np
 import quaternion
@@ -245,10 +246,11 @@ class KitchenV0(robot_env.RobotEnv):
                 0, 255, (self.imlength,), dtype=np.uint8
             )
             if self.proprioception:
-                obs_upper = 8.0 * np.ones(9)
+                obs_upper = 8.0 * np.ones(9 + 7)
                 obs_lower = -obs_upper
                 low = np.concatenate((np.zeros(self.imlength), obs_lower))
                 high = np.concatenate((np.ones(self.imlength), obs_upper))
+                self.proprioception_obs_space = spaces.Box(low, high)
                 self.observation_space = spaces.Box(
                     low,
                     high,
@@ -877,11 +879,40 @@ class KitchenTaskRelaxV1(KitchenV0):
                     imwidth = self.imwidth
                 if not imheight:
                     imheight = self.imheight
-                camera = engine.MovableCamera(self.sim, imwidth, imheight)
-                camera.set_pose(
-                    distance=2.2, lookat=[-0.2, 0.5, 2.0], azimuth=70, elevation=-35
-                )
-                img = camera.render()
+                if original:
+                    camera = engine.MovableCamera(self.sim, imwidth, imheight)
+                    camera.set_pose(
+                        distance=2.2, lookat=[-0.2, 0.5, 2.0], azimuth=70, elevation=-35
+                    )
+                    img = camera.render()
+                if self.wrist_cam_concat_with_fixed_view:
+                    camera = engine.MovableCamera(self.sim, imwidth, imheight)
+                    camera.set_pose(
+                        distance=2.2, lookat=[-0.2, 0.5, 2.0], azimuth=70, elevation=-35
+                    )
+                    img1 = camera.render()
+                    camera = engine.Camera(
+                        self.sim,
+                        imwidth,
+                        imheight,
+                        camera_id=self.sim.model.camera_name2id("gripperPOV"),
+                    )
+                    img2 = camera.render()
+                    img = np.concatenate((img1, img2), axis=-1)
+                elif self.use_wrist_cam:
+                    camera = engine.Camera(
+                        self.sim,
+                        imwidth,
+                        imheight,
+                        camera_id=self.sim.model.camera_name2id("gripperPOV"),
+                    )
+                    img = camera.render()
+                else:
+                    camera = engine.MovableCamera(self.sim, imwidth, imheight)
+                    camera.set_pose(
+                        distance=2.2, lookat=[-0.2, 0.5, 2.0], azimuth=70, elevation=-35
+                    )
+                    img = camera.render()
             else:
                 if not imwidth:
                     imwidth = self.imwidth
