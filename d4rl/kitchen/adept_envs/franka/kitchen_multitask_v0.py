@@ -249,8 +249,12 @@ class KitchenV0(robot_env.RobotEnv):
                 obs_upper = 8.0 * np.ones(9 + 7)
                 obs_lower = -obs_upper
                 self.proprioception_obs_space = spaces.Box(obs_lower, obs_upper)
-                low = np.concatenate((self.observation_space.low, self.proprioception_obs_space.low))
-                high = np.concatenate((self.observation_space.high, self.proprioception_obs_space.high))
+                low = np.concatenate(
+                    (self.observation_space.low, self.proprioception_obs_space.low)
+                )
+                high = np.concatenate(
+                    (self.observation_space.high, self.proprioception_obs_space.high)
+                )
                 self.observation_space = spaces.Box(
                     low,
                     high,
@@ -794,12 +798,23 @@ class KitchenV0(robot_env.RobotEnv):
         reset_vel = self.init_qvel[:].copy()
         self.robot.reset(self, reset_pos, reset_vel)
         self.sim.forward()
+
         self.goal = self._get_task_goal()  # sample a new goal on reset
         self.step_count = 0
-        self.start_img = self.sim_robot.renderer.render_offscreen(
-            self.imwidth,
-            self.imheight,
-        )
+
+        if self.sim_robot._use_dm_backend:
+            imwidth = self.imwidth
+            imheight = self.imheight
+            camera = engine.MovableCamera(self.sim, imwidth, imheight)
+            camera.set_pose(
+                distance=2.2, lookat=[-0.2, 0.5, 2.0], azimuth=70, elevation=-35
+            )
+            self.start_img = camera.render()
+        else:
+            self.start_img = self.sim_robot.renderer.render_offscreen(
+                self.imwidth,
+                self.imheight,
+            )
         return self._get_obs()
 
     def evaluate_success(self, paths):
