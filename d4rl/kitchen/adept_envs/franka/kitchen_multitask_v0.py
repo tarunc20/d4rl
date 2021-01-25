@@ -248,9 +248,9 @@ class KitchenV0(robot_env.RobotEnv):
             if self.proprioception:
                 obs_upper = 8.0 * np.ones(9 + 7)
                 obs_lower = -obs_upper
-                low = np.concatenate((np.zeros(self.imlength), obs_lower))
-                high = np.concatenate((np.ones(self.imlength), obs_upper))
-                self.proprioception_obs_space = spaces.Box(low, high)
+                self.proprioception_obs_space = spaces.Box(obs_lower, obs_upper)
+                low = np.concatenate((self.observation_space.low, self.proprioception_obs_space.low))
+                high = np.concatenate((self.observation_space.high, self.proprioception_obs_space.high))
                 self.observation_space = spaces.Box(
                     low,
                     high,
