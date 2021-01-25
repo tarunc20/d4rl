@@ -378,6 +378,9 @@ class KitchenV0(robot_env.RobotEnv):
     def get_ee_pose(self):
         return self.get_site_xpos("end_effector")
 
+    def get_ee_quat(self):
+        return self.sim.data.body_xquat[10]
+
     def rpy_to_quat(self, rpy):
         q = quaternion.from_euler_angles(rpy)
         return np.array([q.x, q.y, q.z, q.w])
@@ -798,6 +801,7 @@ class KitchenV0(robot_env.RobotEnv):
         reset_vel = self.init_qvel[:].copy()
         self.robot.reset(self, reset_pos, reset_vel)
         self.sim.forward()
+        self.reset_mocap2body_xpos(self.sim)
 
         self.goal = self._get_task_goal()  # sample a new goal on reset
         self.step_count = 0

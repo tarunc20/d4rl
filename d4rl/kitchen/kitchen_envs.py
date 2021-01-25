@@ -523,8 +523,8 @@ class KitchenBase(KitchenTaskRelaxV1):
                     proprioceptive_obs = np.concatenate(
                         (
                             qp,
-                            self.get_mocap_pos("mocap"),
-                            self.get_mocap_quat("mocap"),
+                            self.get_ee_pose(),
+                            self.get_ee_quat(),
                         )
                     )
                     return np.concatenate((img, proprioceptive_obs))
