@@ -58,6 +58,7 @@ class KitchenV0(robot_env.RobotEnv):
         proprioception=False,
         start_image_concat_with_image_obs=False,
         use_max_bound_action_space=False,
+        normalize_proprioception_obs=False,
     ):
         self.obs_dict = {}
         # self.robot_noise_ratio = 0.1  # 10% as per robot_config specs
@@ -157,6 +158,7 @@ class KitchenV0(robot_env.RobotEnv):
         for object_site in self.object_sites:
             self.object_interaction_counts_dict[object_site] = 0.0
         self.proprioception = proprioception
+        self.normalize_proprioception_obs = normalize_proprioception_obs
         super().__init__(
             self.MODEl,
             robot=self.make_robot(

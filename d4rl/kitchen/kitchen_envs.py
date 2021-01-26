@@ -527,6 +527,8 @@ class KitchenBase(KitchenTaskRelaxV1):
                             self.get_ee_quat(),
                         )
                     )
+                    if self.normalize_proprioception_obs:
+                        proprioceptive_obs /= np.linalg.norm(proprioceptive_obs)
                     return np.concatenate((img, proprioceptive_obs))
                 else:
                     return img
