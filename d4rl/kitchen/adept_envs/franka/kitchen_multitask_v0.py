@@ -113,7 +113,7 @@ class KitchenV0(robot_env.RobotEnv):
             move_backward=15,
             open_gripper=[],  # doesn't matter
             close_gripper=[],  # doesn't matter
-            no_op=[],  # doesn't matter
+            no_op=[],
         )
         self.max_arg_len = 16
         self.image_obs = image_obs
@@ -511,8 +511,10 @@ class KitchenV0(robot_env.RobotEnv):
         render_mode="rgb_array",
         render_im_shape=(1000, 1000),
     ):
+        # clamp the pose within workspace limits:
         gripper = self.sim.data.qpos[7:9]
         for _ in range(300):
+            pose = np.clip(pose, [-0.9, 0, 1.5], [0.7, 1.5, 3.25])
             self.reset_mocap2body_xpos(self.sim)
             delta = pose - self.get_ee_pose()
             self._set_action(

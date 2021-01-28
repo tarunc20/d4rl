@@ -437,46 +437,49 @@ class KitchenBase(KitchenTaskRelaxV1):
                 obs_lower,
                 obs_upper,
             )
-        combined_action_space_low = np.array(
-            [
-                0.0,
-                0.0,
-                0.0,
-                -0.5235988,
-                -0.3,
-                0.0,
-                0.0,
-                -0.5,
-                0.0,
-                -0.7853982,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-            ]
-        )
-        combined_action_space_high = np.array(
-            [
-                0.0,
-                0.0,
-                0.0,
-                0.5235988,
-                0.7,
-                1.4,
-                0.5,
-                1.1,
-                0.25,
-                0.0,
-                1.0,
-                0.55,
-                0.45,
-                1.0,
-                1.25,
-                0.6,
-            ]
-        )
+        # combined_action_space_low = np.array(
+        #     [
+        #         0.0,
+        #         0.0,
+        #         0.0,
+        #         -0.5235988,
+        #         -0.3,
+        #         0.0,
+        #         0.0,
+        #         -0.5,
+        #         0.0,
+        #         -0.7853982,
+        #         0.0,
+        #         0.0,
+        #         0.0,
+        #         0.0,
+        #         0.0,
+        #         0.0,
+        #     ]
+        # )
+
+        combined_action_space_low = -1.4 * np.ones(16)
+        # combined_action_space_high = np.array(
+        #     [
+        #         0.0,
+        #         0.0,
+        #         0.0,
+        #         0.5235988,
+        #         0.7,
+        #         1.4,
+        #         0.5,
+        #         1.1,
+        #         0.25,
+        #         0.0,
+        #         1.0,
+        #         0.55,
+        #         0.45,
+        #         1.0,
+        #         1.25,
+        #         0.6,
+        #     ]
+        # )
+        combined_action_space_high = 1.4 * np.ones(16)
         self.combined_action_space = Box(
             combined_action_space_low, combined_action_space_high, dtype=np.float32
         )
