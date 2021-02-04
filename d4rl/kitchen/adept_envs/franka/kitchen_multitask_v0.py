@@ -83,7 +83,6 @@ class KitchenV0(robot_env.RobotEnv):
             11: "rotate_about_x_axis",
         }
         self.primitive_name_to_func = dict(
-            goto_pose=self.goto_pose,
             angled_x_y_grasp=self.angled_x_y_grasp,
             move_delta_ee_pose=self.move_delta_ee_pose,
             rotate_about_y_axis=self.rotate_about_y_axis,
