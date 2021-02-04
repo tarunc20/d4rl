@@ -126,33 +126,6 @@ class KitchenV0(robot_env.RobotEnv):
         self.coverage_grid = np.zeros(
             (grid_size[0], grid_size[1], grid_size[2]), dtype=np.uint8
         )
-        self.object_sites = [
-            "knob1_site",
-            "knob2_site",
-            "knob3_site",
-            "knob4_site",
-            "light_site",
-            "slide_site",
-            "hinge_site1",
-            "hinge_site2",
-            "microhandle_site",
-            "kettle_site",
-        ]
-        self.object_interaction_counts_dict = {}
-        self.object_interaction_tolerance_dict = {
-            "knob1_site": 0,
-            "knob2_site": 0.04,
-            "knob3_site": 0.0,
-            "knob4_site": 0.04,
-            "light_site": 0.04,
-            "slide_site": 0.04,
-            "hinge_site1": 0.15,
-            "hinge_site2": 0.15,
-            "microhandle_site": 0.075,
-            "kettle_site": 0.125,
-        }
-        for object_site in self.object_sites:
-            self.object_interaction_counts_dict[object_site] = 0.0
         self.proprioception = proprioception
         self.normalize_proprioception_obs = normalize_proprioception_obs
         super().__init__(
@@ -351,16 +324,6 @@ class KitchenV0(robot_env.RobotEnv):
             indices, 0, self.coverage_grid.shape[0] - 1
         )  # make sure all valid indices, clip any to min/max of range
         self.coverage_grid[indices[0]][indices[1]][indices[2]] = 1
-
-        # object site interactions
-        for object_site in self.object_interaction_counts_dict.keys():
-            object_pos = self.get_site_xpos(object_site)
-            delta = xpos - object_pos
-            self.object_interaction_counts_dict[object_site] += int(
-                np.linalg.norm(delta)
-                <= self.object_interaction_tolerance_dict[object_site]
-            )
-            # print(np.linalg.norm(delta))
 
     def get_ee_pose(self):
         return self.get_site_xpos("end_effector")

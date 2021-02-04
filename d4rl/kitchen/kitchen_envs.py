@@ -116,7 +116,7 @@ class KitchenBase(KitchenTaskRelaxV1):
         for element in self.tasks_to_complete:
             element_idx = OBS_ELEMENT_INDICES[element]
             distance = np.linalg.norm(
-                next_obj_obs[..., element_idx - idx_offset] - next_goal[element_idx]
+                next_obj_obs[..., element_idx - idx_offset] - OBS_ELEMENT_GOALS[element]
             )
             dense += -1 * distance  # reward must be negative distance for RL
             complete = distance < BONUS_THRESH
@@ -153,24 +153,27 @@ class KitchenBase(KitchenTaskRelaxV1):
     def update_info(self, info):
         next_q_obs = self.obs_dict["qp"]
         next_obj_obs = self.obs_dict["obj_qp"]
-        next_goal = self.obs_dict["goal"]
         idx_offset = len(next_q_obs)
-        tasks_to_log = self.tasks_to_complete
-        for element in tasks_to_log:
+        if self.initializing:
+            self.per_task_cumulative_reward = {
+                k: 0.0 for k in OBS_ELEMENT_INDICES.keys()
+            }
+        for element in OBS_ELEMENT_INDICES.keys():
             element_idx = OBS_ELEMENT_INDICES[element]
             distance = np.linalg.norm(
-                next_obj_obs[..., element_idx - idx_offset] - next_goal[element_idx]
+                next_obj_obs[..., element_idx - idx_offset] - OBS_ELEMENT_GOALS[element]
             )
             info[element + " distance to goal"] = distance
             info[element + " success"] = float(distance < BONUS_THRESH)
-            info["success"] = float(distance < BONUS_THRESH)
+            success = float(distance < BONUS_THRESH)
+            self.per_task_cumulative_reward[element] += success
+            info[element + " cumulative reward"] = self.per_task_cumulative_reward[
+                element
+            ]
+            info[element + " success"] = success
         info["coverage"] = self.coverage_grid.sum() / (
             np.prod(self.coverage_grid.shape)
         )
-        for object_site in self.object_interaction_counts_dict.keys():
-            info[
-                "Object Site: " + object_site + " Interaction Count"
-            ] = self.object_interaction_counts_dict[object_site]
         return info
 
 
