@@ -25,10 +25,8 @@ from dm_control.mujoco import engine
 from gym import spaces
 
 from d4rl.kitchen.adept_envs import robot_env
-from d4rl.kitchen.adept_envs.utils.configurable import configurable
 
 
-# @configurable(pickleable=True)
 class KitchenV0(robot_env.RobotEnv):
 
     CALIBRATION_PATHS = {
@@ -51,7 +49,7 @@ class KitchenV0(robot_env.RobotEnv):
         imwidth=64,
         imheight=64,
         fixed_schema=True,
-        action_scale=1.4,
+        action_scale=1,
         view=1,
         use_wrist_cam=False,
         wrist_cam_concat_with_fixed_view=False,
@@ -71,19 +69,18 @@ class KitchenV0(robot_env.RobotEnv):
         self.wrist_cam_concat_with_fixed_view = wrist_cam_concat_with_fixed_view
         self.start_image_concat_with_image_obs = start_image_concat_with_image_obs
         self.primitive_idx_to_name = {
-            0: "goto_pose",
-            1: "angled_x_y_grasp",
-            2: "move_delta_ee_pose",
-            3: "rotate_about_y_axis",
-            4: "lift",
-            5: "drop",
-            6: "move_left",
-            7: "move_right",
-            8: "move_forward",
-            9: "move_backward",
-            10: "open_gripper",
-            11: "close_gripper",
-            12: "no_op",
+            0: "angled_x_y_grasp",
+            1: "move_delta_ee_pose",
+            2: "rotate_about_y_axis",
+            3: "lift",
+            4: "drop",
+            5: "move_left",
+            6: "move_right",
+            7: "move_forward",
+            8: "move_backward",
+            9: "open_gripper",
+            10: "close_gripper",
+            11: "rotate_about_x_axis",
         }
         self.primitive_name_to_func = dict(
             goto_pose=self.goto_pose,
@@ -98,24 +95,23 @@ class KitchenV0(robot_env.RobotEnv):
             move_backward=self.move_backward,
             open_gripper=self.open_gripper,
             close_gripper=self.close_gripper,
-            no_op=self.no_op,
+            rotate_about_x_axis=self.rotate_about_x_axis,
         )
         self.primitive_name_to_action_idx = dict(
-            goto_pose=[0, 1, 2],
-            angled_x_y_grasp=[3, 4, 5],
-            move_delta_ee_pose=[6, 7, 8],
-            rotate_about_y_axis=9,
-            lift=10,
-            drop=11,
-            move_left=12,
-            move_right=13,
-            move_forward=14,
-            move_backward=15,
+            angled_x_y_grasp=[0, 1, 2],
+            move_delta_ee_pose=[3, 4, 5],
+            rotate_about_y_axis=6,
+            lift=7,
+            drop=8,
+            move_left=9,
+            move_right=10,
+            move_forward=11,
+            move_backward=12,
+            rotate_about_x_axis=13,
             open_gripper=[],  # doesn't matter
             close_gripper=[],  # doesn't matter
-            no_op=[],
         )
-        self.max_arg_len = 16
+        self.max_arg_len = 14
         self.image_obs = image_obs
         self.imwidth = imwidth
         self.imheight = imheight
@@ -218,17 +214,6 @@ class KitchenV0(robot_env.RobotEnv):
         )
 
         self.init_qvel = self.sim.model.key_qvel[0].copy()
-        self.use_max_bound_action_space = use_max_bound_action_space
-        if self.use_max_bound_action_space:
-            act_lower = -action_scale * np.ones((16,))
-            act_upper = action_scale * np.ones((16,))
-            if not self.fixed_schema:
-                act_lower_primitive = np.zeros(self.num_primitives)
-                act_upper_primitive = np.ones(self.num_primitives)
-                act_lower = np.concatenate((act_lower_primitive, act_lower))
-                act_upper = np.concatenate((act_upper_primitive, act_upper))
-            self.action_space = spaces.Box(act_lower, act_upper, dtype=np.float32)
-
         obs_upper = 8.0 * np.ones(self.obs_dim)
         obs_lower = -obs_upper
         self.observation_space = spaces.Box(obs_lower, obs_upper, dtype=np.float32)
@@ -293,7 +278,7 @@ class KitchenV0(robot_env.RobotEnv):
         self.sim.data.mocap_quat[mocap_id] = value
 
     def _get_reward_n_score(self, obs_dict):
-        raise NotImplementedError()
+        return 0
 
     def ctrl_set_action(self, sim, action):
         self.data.ctrl[7] = action[-2]
@@ -393,15 +378,6 @@ class KitchenV0(robot_env.RobotEnv):
 
     def convert_xyzw_to_wxyz(self, q):
         return np.array([q[3], q[0], q[1], q[2]])
-
-    def no_op(
-        self,
-        unused=None,
-        render_every_step=False,
-        render_mode="rgb_array",
-        render_im_shape=(1000, 1000),
-    ):
-        pass
 
     def close_gripper(
         self,
@@ -550,6 +526,23 @@ class KitchenV0(robot_env.RobotEnv):
                         render_im_shape[1],
                         original=True,
                     )
+
+    def rotate_about_x_axis(
+        self,
+        angle,
+        render_every_step=False,
+        render_mode="rgb_array",
+        render_im_shape=(1000, 1000),
+    ):
+        rotation = self.quat_to_rpy(self.sim.data.body_xquat[10]) - np.array(
+            [angle, 0, 0]
+        )
+        self.rotate_ee(
+            rotation,
+            render_every_step=render_every_step,
+            render_mode=render_mode,
+            render_im_shape=render_im_shape,
+        )
 
     def angled_x_y_grasp(
         self,
@@ -737,15 +730,16 @@ class KitchenV0(robot_env.RobotEnv):
                 a[self.num_primitives :],
             )
             primitive_name = self.primitive_idx_to_name[primitive_idx]
-        primitive_name_to_action_dict = self.break_apart_action(primitive_args)
-        primitive_action = primitive_name_to_action_dict[primitive_name]
-        primitive = self.primitive_name_to_func[primitive_name]
-        primitive(
-            primitive_action,
-            render_every_step=render_every_step,
-            render_mode=render_mode,
-            render_im_shape=render_im_shape,
-        )
+        if primitive_name != "no_op":
+            primitive_name_to_action_dict = self.break_apart_action(primitive_args)
+            primitive_action = primitive_name_to_action_dict[primitive_name]
+            primitive = self.primitive_name_to_func[primitive_name]
+            primitive(
+                primitive_action,
+                render_every_step=render_every_step,
+                render_mode=render_mode,
+                render_im_shape=render_im_shape,
+            )
 
     def step(
         self,
@@ -769,7 +763,8 @@ class KitchenV0(robot_env.RobotEnv):
         reward_dict, score = self._get_reward_n_score(self.obs_dict)
 
         # termination
-        self.step_count += 1
+        if not self.initializing:
+            self.step_count += 1
         done = self.step_count == self.max_steps
 
         # finalize step
