@@ -117,8 +117,8 @@ class KitchenV0(robot_env.RobotEnv):
         self.num_primitives = len(self.primitive_name_to_func)
         self.fixed_schema = fixed_schema
         self.action_scale = action_scale
-        self.min_ee_pos = np.array([-1, -0.5, 1.5])
-        self.max_ee_pos = np.array([0.5, 1, 3])
+        self.min_ee_pos = np.array([-0.9, 0, 1.5])
+        self.max_ee_pos = np.array([0.7, 1.5, 3.25])
         self.num_decimals_for_coverage_grid = 2
         max_delta = self.max_ee_pos - self.min_ee_pos
         grid_size = (max_delta * 10 ** self.num_decimals_for_coverage_grid).astype(int)
@@ -452,7 +452,7 @@ class KitchenV0(robot_env.RobotEnv):
         # clamp the pose within workspace limits:
         gripper = self.sim.data.qpos[7:9]
         for _ in range(300):
-            pose = np.clip(pose, [-0.9, 0, 1.5], [0.7, 1.5, 3.25])
+            pose = np.clip(pose, self.min_ee_pos, self.max_ee_pos)
             self.reset_mocap2body_xpos(self.sim)
             delta = pose - self.get_ee_pose()
             self._set_action(
