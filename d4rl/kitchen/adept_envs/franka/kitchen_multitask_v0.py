@@ -57,6 +57,7 @@ class KitchenV0(robot_env.RobotEnv):
         start_image_concat_with_image_obs=False,
         use_max_bound_action_space=False,
         normalize_proprioception_obs=False,
+        use_workspace_limits=True,
     ):
         self.obs_dict = {}
         # self.robot_noise_ratio = 0.1  # 10% as per robot_config specs
@@ -127,6 +128,7 @@ class KitchenV0(robot_env.RobotEnv):
         )
         self.proprioception = proprioception
         self.normalize_proprioception_obs = normalize_proprioception_obs
+        self.use_workspace_limits = use_workspace_limits
         super().__init__(
             self.MODEl,
             robot=self.make_robot(
@@ -452,7 +454,8 @@ class KitchenV0(robot_env.RobotEnv):
         # clamp the pose within workspace limits:
         gripper = self.sim.data.qpos[7:9]
         for _ in range(300):
-            pose = np.clip(pose, self.min_ee_pos, self.max_ee_pos)
+            if self.use_workspace_limits:
+                pose = np.clip(pose, self.min_ee_pos, self.max_ee_pos)
             self.reset_mocap2body_xpos(self.sim)
             delta = pose - self.get_ee_pose()
             self._set_action(
