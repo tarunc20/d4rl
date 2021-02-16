@@ -34,8 +34,12 @@ class KitchenV0(robot_env.RobotEnv):
     }
     # Converted to velocity actuation
     ROBOTS = {"robot": "d4rl.kitchen.adept_envs.franka.robot.franka_robot:Robot_VelAct"}
-    MODEl = os.path.join(
+    MOCAP_MODEL = os.path.join(
         os.path.dirname(__file__), "../franka/assets/franka_kitchen_jntpos_act_ab.xml"
+    )
+    RAW_ACTION_MODEL = os.path.join(
+        os.path.dirname(__file__),
+        "../franka/assets/franka_kitchen_jntpos_act_ab_orig.xml",
     )
     N_DOF_ROBOT = 9
     N_DOF_OBJECT = 21
@@ -43,7 +47,7 @@ class KitchenV0(robot_env.RobotEnv):
     def __init__(
         self,
         robot_params={},
-        max_steps=1,
+        max_steps=5,
         frame_skip=40,
         image_obs=False,
         imwidth=64,
@@ -58,7 +62,12 @@ class KitchenV0(robot_env.RobotEnv):
         use_max_bound_action_space=False,
         normalize_proprioception_obs=False,
         use_workspace_limits=True,
+        use_raw_action_space=False,
     ):
+        if use_raw_action_space:
+            self.MODEL = self.RAW_ACTION_MODEL
+        else:
+            self.MODEL = self.MOCAP_MODEL
         self.obs_dict = {}
         # self.robot_noise_ratio = 0.1  # 10% as per robot_config specs
         self.robot_noise_ratio = 0.0  # 10% as per robot_config specs
@@ -129,8 +138,9 @@ class KitchenV0(robot_env.RobotEnv):
         self.proprioception = proprioception
         self.normalize_proprioception_obs = normalize_proprioception_obs
         self.use_workspace_limits = use_workspace_limits
+        self.use_raw_action_space = use_raw_action_space
         super().__init__(
-            self.MODEl,
+            self.MODEL,
             robot=self.make_robot(
                 n_jnt=self.N_DOF_ROBOT,  # root+robot_jnts
                 n_obj=self.N_DOF_OBJECT,
@@ -141,14 +151,17 @@ class KitchenV0(robot_env.RobotEnv):
                 distance=2.2, lookat=[-0.2, 0.5, 2.0], azimuth=70, elevation=-35
             ),
         )
-        self.reset_mocap_welds(self.sim)
-        self.sim.forward()
-        gripper_target = np.array([-0.498, 0.005, -0.431 + 0.01]) + self.get_ee_pose()
-        gripper_rotation = np.array([1.0, 0.0, 1.0, 0.0])
-        self.set_mocap_pos("mocap", gripper_target)
-        self.set_mocap_quat("mocap", gripper_rotation)
-        for _ in range(10):
-            self.sim.step()
+        if not self.use_raw_action_space:
+            self.reset_mocap_welds(self.sim)
+            self.sim.forward()
+            gripper_target = (
+                np.array([-0.498, 0.005, -0.431 + 0.01]) + self.get_ee_pose()
+            )
+            gripper_rotation = np.array([1.0, 0.0, 1.0, 0.0])
+            self.set_mocap_pos("mocap", gripper_target)
+            self.set_mocap_quat("mocap", gripper_rotation)
+            for _ in range(10):
+                self.sim.step()
 
         self.init_qpos = self.sim.model.key_qpos[0].copy()
         # For the microwave kettle slide hinge
@@ -221,6 +234,13 @@ class KitchenV0(robot_env.RobotEnv):
                     high,
                     dtype=np.float32,
                 )
+        if self.use_raw_action_space:
+            self.act_mid = np.zeros(self.N_DOF_ROBOT)
+            self.act_amp = 2.0 * np.ones(self.N_DOF_ROBOT)
+
+            act_lower = -1 * np.ones((self.N_DOF_ROBOT,))
+            act_upper = 1 * np.ones((self.N_DOF_ROBOT,))
+            self.action_space = spaces.Box(act_lower, act_upper)
 
     def get_idx_from_primitive_name(self, primitive_name):
         for idx, pn in self.primitive_idx_to_name.items():
@@ -713,15 +733,22 @@ class KitchenV0(robot_env.RobotEnv):
         render_mode="rgb_array",
         render_im_shape=(1000, 1000),
     ):
-        if not self.initializing:
-            if render_every_step and render_mode == "rgb_array":
-                self.img_array = []
-            self.act(
-                a,
-                render_every_step=render_every_step,
-                render_mode=render_mode,
-                render_im_shape=render_im_shape,
-            )
+        if self.use_raw_action_space:
+            a = np.clip(a, -1.0, 1.0)
+
+            if not self.initializing:
+                a = self.act_mid + a * self.act_amp  # mean center and scale
+            self.robot.step(self, a, step_duration=self.skip * self.model.opt.timestep)
+        else:
+            if not self.initializing:
+                if render_every_step and render_mode == "rgb_array":
+                    self.img_array = []
+                self.act(
+                    a,
+                    render_every_step=render_every_step,
+                    render_mode=render_mode,
+                    render_im_shape=render_im_shape,
+                )
         obs = self._get_obs()
 
         # rewards
@@ -765,7 +792,8 @@ class KitchenV0(robot_env.RobotEnv):
         reset_vel = self.init_qvel[:].copy()
         self.robot.reset(self, reset_pos, reset_vel)
         self.sim.forward()
-        self.reset_mocap2body_xpos(self.sim)
+        if not self.use_raw_action_space:
+            self.reset_mocap2body_xpos(self.sim)
 
         self.goal = self._get_task_goal()  # sample a new goal on reset
         self.step_count = 0

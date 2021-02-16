@@ -242,24 +242,24 @@ class Robot(base_robot.BaseRobot):
         return ctrl_feasible_position
 
     # step the robot env
-    def step(self, env, controller, ctrl_desired, step_duration, sim_override=False):
+    def step(self, env, ctrl_desired, step_duration, sim_override=False):
 
         # Populate observation cache during startup
         if env.initializing:
             self._observation_cache_refresh(env)
 
+        # enforce velocity limits
+        ctrl_feasible = self.ctrl_velocity_limits(ctrl_desired, step_duration)
+
+        # enforce position limits
+        ctrl_feasible = self.ctrl_position_limits(ctrl_feasible)
+
         # Send controls to the robot
         if self.is_hardware and (not sim_override):
             raise NotImplementedError()
         else:
-            ctrl_desired = controller.run_controller()
-            # enforce velocity limits
-            ctrl_feasible = self.ctrl_velocity_limits(ctrl_desired, step_duration)
-
-            # enforce position limits
-            ctrl_feasible = self.ctrl_position_limits(ctrl_feasible)
             env.do_simulation(
-                ctrl_feasible * 100, step_duration
+                ctrl_feasible, int(step_duration / env.sim.model.opt.timestep)
             )  # render is folded in here
 
         # Update current robot state on the overlay
@@ -319,8 +319,8 @@ class Robot(base_robot.BaseRobot):
 
 class Robot_PosAct(Robot):
 
-    # enforce velocity specs.
-    # ALERT: This depends on previous observation. This is not ideal as it breaks MDP assumptions. Be careful
+    # enforce velocity sepcs.
+    # ALERT: This depends on previous observation. This is not ideal as it breaks MDP addumptions. Be careful
     def ctrl_velocity_limits(self, ctrl_position, step_duration):
         last_obs = self.observation_cache[-1]
         ctrl_desired_vel = (

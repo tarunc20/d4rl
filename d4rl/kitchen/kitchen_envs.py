@@ -43,7 +43,7 @@ class KitchenBase(KitchenTaskRelaxV1):
             combined_action_space_low, combined_action_space_high, dtype=np.float32
         )
         self.use_combined_action_space = use_combined_action_space
-        if self.use_combined_action_space:
+        if self.use_combined_action_space and not self.use_raw_action_space:
             self.action_space = self.combined_action_space
             if not self.fixed_schema:
                 act_lower_primitive = np.zeros(self.num_primitives)
@@ -189,7 +189,7 @@ class KitchenMicrowaveV0(KitchenBase):
     TASK_ELEMENTS = ["microwave"]
 
     def __init__(self, delta=0, **kwargs):
-        super(KitchenMicrowaveV0, self).__init__(max_steps=5, **kwargs)
+        super(KitchenMicrowaveV0, self).__init__(**kwargs)
         self.step_to_primitive_name = {
             0: "drop",
             1: "angled_x_y_grasp",
@@ -197,7 +197,7 @@ class KitchenMicrowaveV0(KitchenBase):
             3: "no_op",
             4: "no_op",
         }
-        if not self.use_combined_action_space:
+        if not self.use_combined_action_space and not self.use_raw_action_space:
             action_low = np.array(
                 [
                     -np.pi / 6,
@@ -249,7 +249,7 @@ class KitchenKettleV0(KitchenBase):
     TASK_ELEMENTS = ["kettle"]
 
     def __init__(self, delta=0, **kwargs):
-        super(KitchenKettleV0, self).__init__(max_steps=5, **kwargs)
+        super(KitchenKettleV0, self).__init__(**kwargs)
         self.step_to_primitive_name = {
             0: "drop",
             1: "angled_x_y_grasp",
@@ -257,7 +257,7 @@ class KitchenKettleV0(KitchenBase):
             3: "drop",
             4: "open_gripper",
         }
-        if not self.use_combined_action_space:
+        if not self.use_combined_action_space and not self.use_raw_action_space:
             action_low = np.array(
                 [
                     0,
@@ -309,7 +309,7 @@ class KitchenBottomLeftBurnerV0(KitchenBase):
     TASK_ELEMENTS = ["bottom left burner"]
 
     def __init__(self, delta=0.0, **kwargs):
-        super(KitchenBottomLeftBurnerV0, self).__init__(max_steps=5, **kwargs)
+        super(KitchenBottomLeftBurnerV0, self).__init__(**kwargs)
 
         self.step_to_primitive_name = {
             0: "lift",
@@ -318,7 +318,7 @@ class KitchenBottomLeftBurnerV0(KitchenBase):
             3: "no_op",
             4: "no_op",
         }
-        if not self.use_combined_action_space:
+        if not self.use_combined_action_space and not self.use_raw_action_space:
             action_low = np.array(
                 [
                     0,
@@ -370,7 +370,7 @@ class KitchenTopLeftBurnerV0(KitchenBase):
     TASK_ELEMENTS = ["top left burner"]
 
     def __init__(self, delta=0, **kwargs):
-        super(KitchenTopLeftBurnerV0, self).__init__(max_steps=5, **kwargs)
+        super(KitchenTopLeftBurnerV0, self).__init__(**kwargs)
 
         self.step_to_primitive_name = {
             0: "lift",
@@ -379,7 +379,7 @@ class KitchenTopLeftBurnerV0(KitchenBase):
             3: "no_op",
             4: "no_op",
         }
-        if not self.use_combined_action_space:
+        if not self.use_combined_action_space and not self.use_raw_action_space:
             action_low = np.array(
                 [
                     0,
@@ -431,7 +431,7 @@ class KitchenSlideCabinetV0(KitchenBase):
     TASK_ELEMENTS = ["slide cabinet"]
 
     def __init__(self, delta=0, **kwargs):
-        super(KitchenSlideCabinetV0, self).__init__(max_steps=5, **kwargs)
+        super(KitchenSlideCabinetV0, self).__init__(**kwargs)
         self.step_to_primitive_name = {
             0: "lift",
             1: "angled_x_y_grasp",
@@ -439,7 +439,7 @@ class KitchenSlideCabinetV0(KitchenBase):
             3: "no_op",
             4: "no_op",
         }
-        if not self.use_combined_action_space:
+        if not self.use_combined_action_space and not self.use_raw_action_space:
             action_low = np.array(
                 [
                     0.0,
@@ -491,7 +491,7 @@ class KitchenHingeCabinetV0(KitchenBase):
     TASK_ELEMENTS = ["hinge cabinet"]
 
     def __init__(self, delta=0, **kwargs):
-        super(KitchenHingeCabinetV0, self).__init__(max_steps=5, **kwargs)
+        super(KitchenHingeCabinetV0, self).__init__(**kwargs)
 
         self.step_to_primitive_name = {
             0: "lift",
@@ -500,7 +500,7 @@ class KitchenHingeCabinetV0(KitchenBase):
             3: "rotate_about_x_axis",
             4: "no_op",
         }
-        if not self.use_combined_action_space:
+        if not self.use_combined_action_space and not self.use_raw_action_space:
             action_low = np.array(
                 [
                     -np.pi / 6,
@@ -552,7 +552,7 @@ class KitchenLightSwitchV0(KitchenBase):
     TASK_ELEMENTS = ["light switch"]
 
     def __init__(self, delta=0, **kwargs):
-        super(KitchenLightSwitchV0, self).__init__(max_steps=5, **kwargs)
+        super(KitchenLightSwitchV0, self).__init__(**kwargs)
         self.step_to_primitive_name = {
             0: "close_gripper",
             1: "lift",
@@ -560,7 +560,7 @@ class KitchenLightSwitchV0(KitchenBase):
             3: "move_forward",
             4: "move_left",
         }
-        if not self.use_combined_action_space:
+        if not self.use_combined_action_space and not self.use_raw_action_space:
             action_low = np.array(
                 [
                     0.0,
