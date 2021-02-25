@@ -103,6 +103,7 @@ class KitchenBase(KitchenTaskRelaxV1):
 
     def reset_model(self):
         self.tasks_to_complete = set(self.TASK_ELEMENTS)
+        self.episodic_cumulative_reward = 0
         return super(KitchenBase, self).reset_model()
 
     def _get_reward_n_score(self, obs_dict):
@@ -145,6 +146,8 @@ class KitchenBase(KitchenTaskRelaxV1):
             render_mode=render_mode,
             render_im_shape=render_im_shape,
         )
+        self.episodic_cumulative_reward += reward
+
         if self.TERMINATE_ON_TASK_COMPLETE:
             done = not self.tasks_to_complete
         self.update_info(env_info)
@@ -174,15 +177,18 @@ class KitchenBase(KitchenTaskRelaxV1):
         info["coverage"] = self.coverage_grid.sum() / (
             np.prod(self.coverage_grid.shape)
         )
+        info["episodic cumulative reward"] = self.episodic_cumulative_reward
         return info
 
 
-class KitchenMicrowaveKettleLightSliderV0(KitchenBase):
-    TASK_ELEMENTS = ["microwave", "kettle", "light switch", "slide cabinet"]
+class KitchenMicrowaveKettleLightTopLeftBurnerV0(KitchenBase):
+    TASK_ELEMENTS = ["microwave", "kettle", "light switch", "top left burner"]
+    REMOVE_TASKS_WHEN_COMPLETE = True
 
 
-class KitchenMicrowaveKettleBottomLeftBurnerLightV0(KitchenBase):
-    TASK_ELEMENTS = ["microwave", "kettle", "bottom left burner", "light switch"]
+class KitchenHingeKettleBottomLeftBurnerLightV0(KitchenBase):
+    TASK_ELEMENTS = ["hinge cabinet", "kettle", "bottom left burner", "light switch"]
+    REMOVE_TASKS_WHEN_COMPLETE = True
 
 
 class KitchenMicrowaveV0(KitchenBase):
