@@ -1,8 +1,8 @@
 from gym.envs.registration import register
 
 from .kitchen_envs import (
-    KitchenMicrowaveKettleBottomLeftBurnerLightV0,
-    KitchenMicrowaveKettleLightSliderV0,
+    KitchenHingeSlideBottomLeftBurnerLightV0,
+    KitchenMicrowaveKettleLightTopLeftBurnerV0,
 )
 
 # Smaller dataset with only positive demonstrations.

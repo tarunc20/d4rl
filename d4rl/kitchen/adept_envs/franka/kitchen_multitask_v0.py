@@ -68,6 +68,7 @@ class KitchenV0(robot_env.RobotEnv):
             self.MODEL = self.RAW_ACTION_MODEL
         else:
             self.MODEL = self.MOCAP_MODEL
+        self.episodic_cumulative_reward = 0
         self.obs_dict = {}
         # self.robot_noise_ratio = 0.1  # 10% as per robot_config specs
         self.robot_noise_ratio = 0.0  # 10% as per robot_config specs
