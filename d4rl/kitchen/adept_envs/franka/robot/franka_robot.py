@@ -354,3 +354,11 @@ class Robot_VelAct(Robot):
             last_obs.qpos_robot[: self.n_jnt] + ctrl_feasible_vel * step_duration
         )
         return ctrl_feasible_position
+
+
+class Robot_Unconstrained(Robot):
+    def ctrl_velocity_limits(self, ctrl_velocity, step_duration):
+        return ctrl_velocity
+
+    def ctrl_position_limits(self, ctrl_position):
+        return ctrl_position

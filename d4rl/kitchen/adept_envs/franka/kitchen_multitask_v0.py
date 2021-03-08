@@ -34,12 +34,48 @@ class KitchenV0(robot_env.RobotEnv):
     }
     # Converted to velocity actuation
     ROBOTS = {"robot": "d4rl.kitchen.adept_envs.franka.robot.franka_robot:Robot_VelAct"}
-    MOCAP_MODEL = os.path.join(
-        os.path.dirname(__file__), "../franka/assets/franka_kitchen_jntpos_act_ab.xml"
+    EE_CTRL_MODEL = os.path.join(
+        os.path.dirname(__file__), "../franka/assets/franka_kitchen_ee_ctrl.xml"
     )
-    RAW_ACTION_MODEL = os.path.join(
+    JOINT_POSITION_CTRL_MODEL = os.path.join(
         os.path.dirname(__file__),
         "../franka/assets/franka_kitchen_jntpos_act_ab_orig.xml",
+    )
+    TORQUE_CTRL_MODEL = os.path.join(
+        os.path.dirname(__file__),
+        "../franka/assets/franka_kitchen_jntpos_act_ab_orig.xml",
+    )
+    CTLR_MODES_DICT = dict(
+        primitives=dict(
+            model=EE_CTRL_MODEL,
+            robot={
+                "robot": "d4rl.kitchen.adept_envs.franka.robot.franka_robot:Robot_Unconstrained"
+            },
+        ),
+        end_effector=dict(
+            model=EE_CTRL_MODEL,
+            robot={
+                "robot": "d4rl.kitchen.adept_envs.franka.robot.franka_robot:Robot_Unconstrained"
+            },
+        ),
+        torque=dict(
+            model=TORQUE_CTRL_MODEL,
+            robot={
+                "robot": "d4rl.kitchen.adept_envs.franka.robot.franka_robot:Robot_Unconstrained"
+            },
+        ),
+        joint_position=dict(
+            model=JOINT_POSITION_CTRL_MODEL,
+            robot={
+                "robot": "d4rl.kitchen.adept_envs.franka.robot.franka_robot:Robot_PosAct"
+            },
+        ),
+        joint_velocity=dict(
+            model=JOINT_POSITION_CTRL_MODEL,
+            robot={
+                "robot": "d4rl.kitchen.adept_envs.franka.robot.franka_robot:Robot_VelAct"
+            },
+        ),
     )
     N_DOF_ROBOT = 9
     N_DOF_OBJECT = 21
@@ -59,15 +95,13 @@ class KitchenV0(robot_env.RobotEnv):
         wrist_cam_concat_with_fixed_view=False,
         proprioception=False,
         start_image_concat_with_image_obs=False,
-        use_max_bound_action_space=False,
         normalize_proprioception_obs=False,
         use_workspace_limits=True,
-        use_raw_action_space=False,
+        control_mode="primitives",
     ):
-        if use_raw_action_space:
-            self.MODEL = self.RAW_ACTION_MODEL
-        else:
-            self.MODEL = self.MOCAP_MODEL
+        self.control_mode = control_mode
+        self.MODEL = self.CTLR_MODES_DICT[self.control_mode]["model"]
+        self.ROBOTS = self.CTLR_MODES_DICT[self.control_mode]["robot"]
         self.episodic_cumulative_reward = 0
         self.obs_dict = {}
         # self.robot_noise_ratio = 0.1  # 10% as per robot_config specs
@@ -139,7 +173,6 @@ class KitchenV0(robot_env.RobotEnv):
         self.proprioception = proprioception
         self.normalize_proprioception_obs = normalize_proprioception_obs
         self.use_workspace_limits = use_workspace_limits
-        self.use_raw_action_space = use_raw_action_space
         super().__init__(
             self.MODEL,
             robot=self.make_robot(
@@ -152,7 +185,7 @@ class KitchenV0(robot_env.RobotEnv):
                 distance=2.2, lookat=[-0.2, 0.5, 2.0], azimuth=70, elevation=-35
             ),
         )
-        if not self.use_raw_action_space:
+        if self.control_mode in ["primitives", "end_effector"]:
             self.reset_mocap_welds(self.sim)
             self.sim.forward()
             gripper_target = (
@@ -235,12 +268,18 @@ class KitchenV0(robot_env.RobotEnv):
                     high,
                     dtype=np.float32,
                 )
-        if self.use_raw_action_space:
+        if self.control_mode in ["joint_position", "joint_velocity", "torque"]:
             self.act_mid = np.zeros(self.N_DOF_ROBOT)
             self.act_amp = 2.0 * np.ones(self.N_DOF_ROBOT)
 
             act_lower = -1 * np.ones((self.N_DOF_ROBOT,))
             act_upper = 1 * np.ones((self.N_DOF_ROBOT,))
+            self.action_space = spaces.Box(act_lower, act_upper)
+
+        if self.control_mode == "end_effector":
+            # 3 for xyz, 4 for quaternion, 2 for gripper
+            act_lower = -1 * np.ones((9,))
+            act_upper = 1 * np.ones((9,))
             self.action_space = spaces.Box(act_lower, act_upper)
 
     def get_idx_from_primitive_name(self, primitive_name):
@@ -734,12 +773,21 @@ class KitchenV0(robot_env.RobotEnv):
         render_mode="rgb_array",
         render_im_shape=(1000, 1000),
     ):
-        if self.use_raw_action_space:
+        if self.control_mode in [
+            "joint_position",
+            "joint_velocity",
+            "torque",
+            "end_effector",
+        ]:
             a = np.clip(a, -1.0, 1.0)
-
-            if not self.initializing:
-                a = self.act_mid + a * self.act_amp  # mean center and scale
-            self.robot.step(self, a, step_duration=self.skip * self.model.opt.timestep)
+            if self.control_mode == "end_effector" and not self.initializing:
+                self._set_action(a)
+            else:
+                if not self.initializing and self.control_mode == "joint_velocity":
+                    a = self.act_mid + a * self.act_amp  # mean center and scale
+                self.robot.step(
+                    self, a, step_duration=self.skip * self.model.opt.timestep
+                )
         else:
             if not self.initializing:
                 if render_every_step and render_mode == "rgb_array":
@@ -793,7 +841,7 @@ class KitchenV0(robot_env.RobotEnv):
         reset_vel = self.init_qvel[:].copy()
         self.robot.reset(self, reset_pos, reset_vel)
         self.sim.forward()
-        if not self.use_raw_action_space:
+        if self.control_mode in ["primitives", "end_effector"]:
             self.reset_mocap2body_xpos(self.sim)
 
         self.goal = self._get_task_goal()  # sample a new goal on reset

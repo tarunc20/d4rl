@@ -43,7 +43,7 @@ class KitchenBase(KitchenTaskRelaxV1):
             combined_action_space_low, combined_action_space_high, dtype=np.float32
         )
         self.use_combined_action_space = use_combined_action_space
-        if self.use_combined_action_space and not self.use_raw_action_space:
+        if self.use_combined_action_space and self.control_mode == "primitives":
             self.action_space = self.combined_action_space
             if not self.fixed_schema:
                 act_lower_primitive = np.zeros(self.num_primitives)
@@ -208,7 +208,7 @@ class KitchenMicrowaveV0(KitchenBase):
             3: "no_op",
             4: "no_op",
         }
-        if not self.use_combined_action_space and not self.use_raw_action_space:
+        if not self.use_combined_action_space and self.control_mode == "primitives":
             action_low = np.array(
                 [
                     -np.pi / 6,
@@ -268,7 +268,7 @@ class KitchenKettleV0(KitchenBase):
             3: "drop",
             4: "open_gripper",
         }
-        if not self.use_combined_action_space and not self.use_raw_action_space:
+        if not self.use_combined_action_space and self.control_mode == "primitives":
             action_low = np.array(
                 [
                     0,
@@ -329,7 +329,7 @@ class KitchenBottomLeftBurnerV0(KitchenBase):
             3: "no_op",
             4: "no_op",
         }
-        if not self.use_combined_action_space and not self.use_raw_action_space:
+        if not self.use_combined_action_space and self.control_mode == "primitives":
             action_low = np.array(
                 [
                     0,
@@ -390,7 +390,7 @@ class KitchenTopLeftBurnerV0(KitchenBase):
             3: "no_op",
             4: "no_op",
         }
-        if not self.use_combined_action_space and not self.use_raw_action_space:
+        if not self.use_combined_action_space and self.control_mode == "primitives":
             action_low = np.array(
                 [
                     0,
@@ -450,7 +450,7 @@ class KitchenSlideCabinetV0(KitchenBase):
             3: "no_op",
             4: "no_op",
         }
-        if not self.use_combined_action_space and not self.use_raw_action_space:
+        if not self.use_combined_action_space and self.control_mode == "primitives":
             action_low = np.array(
                 [
                     0.0,
@@ -511,7 +511,7 @@ class KitchenHingeCabinetV0(KitchenBase):
             3: "rotate_about_x_axis",
             4: "no_op",
         }
-        if not self.use_combined_action_space and not self.use_raw_action_space:
+        if not self.use_combined_action_space and self.control_mode == "primitives":
             action_low = np.array(
                 [
                     -np.pi / 6,
@@ -571,7 +571,7 @@ class KitchenLightSwitchV0(KitchenBase):
             3: "move_forward",
             4: "move_left",
         }
-        if not self.use_combined_action_space and not self.use_raw_action_space:
+        if not self.use_combined_action_space and self.control_mode == "primitives":
             action_low = np.array(
                 [
                     0.0,
