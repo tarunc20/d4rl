@@ -39,11 +39,11 @@ class KitchenV0(robot_env.RobotEnv):
     )
     JOINT_POSITION_CTRL_MODEL = os.path.join(
         os.path.dirname(__file__),
-        "../franka/assets/franka_kitchen_jntpos_act_ab_orig.xml",
+        "../franka/assets/franka_kitchen_joint_position_ctrl.xml",
     )
     TORQUE_CTRL_MODEL = os.path.join(
         os.path.dirname(__file__),
-        "../franka/assets/franka_kitchen_jntpos_act_ab_orig.xml",
+        "../franka/assets/franka_kitchen_torque_ctrl.xml",
     )
     CTLR_MODES_DICT = dict(
         primitives=dict(
