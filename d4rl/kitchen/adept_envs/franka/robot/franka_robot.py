@@ -77,7 +77,7 @@ class Robot(base_robot.BaseRobot):
         # Robot: Simulation
         else:
             self.robot_name = "Franka"
-            cprint("Initializing %s sim" % self.robot_name, "white", "on_grey")
+            # cprint("Initializing %s sim" % self.robot_name, "white", "on_grey")
 
         # Robot's time
         self.time_start = time.time()
@@ -98,7 +98,7 @@ class Robot(base_robot.BaseRobot):
         self.robot_pos_noise_amp = np.zeros(self.n_dofs, dtype=float)
         self.robot_vel_noise_amp = np.zeros(self.n_dofs, dtype=float)
 
-        print("Reading configurations for %s" % self.robot_name)
+        # print("Reading configurations for %s" % self.robot_name)
         for i in range(self.n_dofs):
             self.robot_mode[i] = read_config_from_node(
                 root, "qpos" + str(i), "mode", int
