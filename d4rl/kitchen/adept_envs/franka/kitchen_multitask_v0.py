@@ -156,10 +156,10 @@ class KitchenV0(robot_env.RobotEnv):
             close_gripper=[],  # doesn't matter
         )
         self.max_arg_len = 14
+        self.num_primitives = len(self.primitive_name_to_func)
         self.image_obs = image_obs
         self.imwidth = imwidth
         self.imheight = imheight
-        self.num_primitives = len(self.primitive_name_to_func)
         self.fixed_schema = fixed_schema
         self.action_scale = action_scale
         self.min_ee_pos = np.array([-0.9, 0, 1.5])
