@@ -16,6 +16,7 @@
 # limitations under the License.
 import copy
 import os
+from robosuite_vices.controllers.arm_controller import JointImpedanceController
 
 import cv2
 import mujoco_py
@@ -76,6 +77,12 @@ class KitchenV0(robot_env.RobotEnv):
                 "robot": "d4rl.kitchen.adept_envs.franka.robot.franka_robot:Robot_VelAct"
             },
         ),
+        vices=dict(
+            model=JOINT_POSITION_CTRL_MODEL,
+            robot={
+                "robot": "d4rl.kitchen.adept_envs.franka.robot.franka_robot:Robot_Unconstrained"
+            },
+        )
     )
     N_DOF_ROBOT = 9
     N_DOF_OBJECT = 21
@@ -83,7 +90,7 @@ class KitchenV0(robot_env.RobotEnv):
     def __init__(
         self,
         robot_params={},
-        max_steps=5,
+        max_path_length=5,
         frame_skip=40,
         image_obs=False,
         imwidth=64,
@@ -107,7 +114,7 @@ class KitchenV0(robot_env.RobotEnv):
         # self.robot_noise_ratio = 0.1  # 10% as per robot_config specs
         self.robot_noise_ratio = 0.0  # 10% as per robot_config specs
         self.goal = np.zeros((30,))
-        self.max_steps = max_steps
+        self.max_path_length = max_path_length
         self.step_count = 0
         self.view = view
         self.use_wrist_cam = use_wrist_cam
@@ -156,10 +163,10 @@ class KitchenV0(robot_env.RobotEnv):
             close_gripper=[],  # doesn't matter
         )
         self.max_arg_len = 14
+        self.num_primitives = len(self.primitive_name_to_func)
         self.image_obs = image_obs
         self.imwidth = imwidth
         self.imheight = imheight
-        self.num_primitives = len(self.primitive_name_to_func)
         self.fixed_schema = fixed_schema
         self.action_scale = action_scale
         self.min_ee_pos = np.array([-0.9, 0, 1.5])
@@ -281,6 +288,28 @@ class KitchenV0(robot_env.RobotEnv):
             act_lower = -1 * np.ones((9,))
             act_upper = 1 * np.ones((9,))
             self.action_space = spaces.Box(act_lower, act_upper)
+
+        if self.control_mode == 'vices':
+            control_range = np.ones(9)
+            ctrl_ratio = 1.0
+            control_freq = 0.5 * ctrl_ratio
+            damping_max = 2
+            damping_min = 0.1
+            kp_max = 100
+            kp_min = 0.05
+            self.sim.model.opt.timestep = .01
+            self.controller = JointImpedanceController(
+                control_range, control_freq, kp_max, kp_min, damping_max, damping_min
+            )
+            self.joint_index_vel = np.arange(9)
+            self.joint_index_pos = np.arange(9)
+            self.controller.update_mass_matrix(self.sim, self.joint_index_vel)
+            self.controller.update_model(
+                self.sim, self.joint_index_pos, self.joint_index_vel
+            )
+            high = np.ones(27)
+            low = -high
+            self.action_space = spaces.Box(low=low, high=high, dtype=np.float32)
 
     def get_idx_from_primitive_name(self, primitive_name):
         for idx, pn in self.primitive_idx_to_name.items():
@@ -766,6 +795,10 @@ class KitchenV0(robot_env.RobotEnv):
                 render_im_shape=render_im_shape,
             )
 
+    def update(self):
+        self.controller.update_mass_matrix(self.sim, self.joint_index_vel)
+        self.controller.update_model(self.sim, self.joint_index_pos, self.joint_index_vel)
+
     def step(
         self,
         a,
@@ -780,8 +813,16 @@ class KitchenV0(robot_env.RobotEnv):
             "end_effector",
         ]:
             a = np.clip(a, -1.0, 1.0)
-            if self.control_mode == "end_effector" and not self.initializing:
-                self._set_action(a)
+            if self.control_mode == "end_effector":
+                if not self.initializing:
+                    self._set_action(a)
+            elif self.control_mode == "vices":
+                if not self.initializing:
+                    for i in range(int(self.controller.interpolation_steps)):
+                        self.update()
+                        action = self.controller.action_to_torques(a, i == 0)
+                        self.sim.data.ctrl[:] = action
+                        self.sim.step()
             else:
                 if not self.initializing and self.control_mode == "joint_velocity":
                     a = self.act_mid + a * self.act_amp  # mean center and scale
@@ -806,7 +847,7 @@ class KitchenV0(robot_env.RobotEnv):
         # termination
         if not self.initializing:
             self.step_count += 1
-        done = self.step_count == self.max_steps
+        done = self.step_count == self.max_path_length
 
         # finalize step
         env_info = {
