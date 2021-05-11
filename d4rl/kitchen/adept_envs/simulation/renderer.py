@@ -163,7 +163,14 @@ class MjPyRenderer(Renderer):
 class DMRenderer(Renderer):
     """Class for rendering DM Control Physics objects."""
 
-    def __init__(self, physics, clear_geom_group_0=False, camera_select_next=False, **kwargs):
+    def __init__(
+        self,
+        physics,
+        clear_geom_group_0=False,
+        camera_select_next=False,
+        mjpy_sim=None,
+        **kwargs
+    ):
         assert isinstance(
             physics, module.get_dm_mujoco().Physics
         ), "DMRenderer takes a DM Control Physics object."
@@ -178,6 +185,7 @@ class DMRenderer(Renderer):
             self._camera_settings["lookat"] = [
                 np.median(self._physics.data.geom_xpos[:, i]) for i in range(3)
             ]
+        self.mjpy_sim = mjpy_sim
 
     def render_to_window(self):
         """Renders the Physics object to a window.
@@ -186,19 +194,29 @@ class DMRenderer(Renderer):
 
         This function is a no-op if the window was already created.
         """
+        if self.mjpy_sim:
+            for i, val in enumerate(self.mjpy_sim.data.qpos):
+                self._physics.data.qpos[i] = val
+            for i, val in enumerate(self.mjpy_sim.data.qvel):
+                self._physics.data.qvel[i] = val
+            self._physics.forward()
         if not self._window:
-            self._window = DMRenderWindow(clear_geom_group_0=self.clear_geom_group_0, camera_select_next=self.camera_select_next)
+            self._window = DMRenderWindow(
+                clear_geom_group_0=self.clear_geom_group_0,
+                camera_select_next=self.camera_select_next,
+            )
             self._window.load_model(self._physics)
             self._update_camera(self._window.camera)
 
-        #useful for tuning camera parameters!
-        # print(self._window.camera.distance)
-        # print(self._window.camera.lookat)
-        # print(self._window.camera.azimuth)
-        # print(self._window.camera.elevation)
-        # print()
-        # print()
-        # print()
+        # useful for tuning camera parameters!
+        # print(
+        #     dict(
+        #         distance=self._window.camera.distance,
+        #         lookat=self._window.camera.lookat,
+        #         azimuth=self._window.camera.azimuth,
+        #         elevation=self._window.camera.elevation,
+        #     )
+        # )
 
         self._window.run_frame()
 
@@ -221,6 +239,12 @@ class DMRenderer(Renderer):
         Returns:
             A NumPy array of the pixels.
         """
+        if self.mjpy_sim:
+            for i, val in enumerate(self.mjpy_sim.data.qpos):
+                self._physics.data.qpos[i] = val
+            for i, val in enumerate(self.mjpy_sim.data.qvel):
+                self._physics.data.qvel[i] = val
+            self._physics.forward()
         mujoco = module.get_dm_mujoco()
         # TODO(michaelahn): Consider caching the camera.
         camera = mujoco.Camera(
@@ -235,6 +259,7 @@ class DMRenderer(Renderer):
         scene_option = wrapper.MjvOption()
         if self.clear_geom_group_0:
             scene_option.geomgroup[0] = 0
+            scene_option.sitegroup[1] = 0
         image = camera.render(
             depth=(mode == RenderMode.DEPTH),
             segmentation=(mode == RenderMode.SEGMENTATION),
@@ -280,6 +305,7 @@ class DMRenderWindow:
         if clear_geom_group_0:
             # for robosuite this gets rid of extraneous collision/visual meshes
             self._viewer._render_settings.geom_groups[0] = 0
+            self._viewer._render_settings.site_groups[1] = 0
 
     @property
     def camera(self):
@@ -303,15 +329,15 @@ class DMRenderWindow:
         )
 
         self._viewer.initialize(physics, self._renderer, touchpad=False)
-        if self.camera_select_next:
-            #for robosuite we want to shift the camera idx by 1
-            self._viewer._camera_select.select_next()
 
     def run_frame(self):
         """Renders one frame of the simulation.
 
         NOTE: This is extremely slow at the moment.
         """
+        if self.camera_select_next:
+            # for robosuite we want to shift the camera idx by 1
+            self._viewer._camera_select.select_next()
         glfw = module.get_dm_viewer().gui.glfw_gui.glfw
         glfw_window = self._window._context.window
         if glfw.window_should_close(glfw_window):

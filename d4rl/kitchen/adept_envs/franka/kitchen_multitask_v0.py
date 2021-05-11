@@ -82,7 +82,7 @@ class KitchenV0(robot_env.RobotEnv):
             robot={
                 "robot": "d4rl.kitchen.adept_envs.franka.robot.franka_robot:Robot_Unconstrained"
             },
-        )
+        ),
     )
     N_DOF_ROBOT = 9
     N_DOF_OBJECT = 21
@@ -289,7 +289,7 @@ class KitchenV0(robot_env.RobotEnv):
             act_upper = 1 * np.ones((9,))
             self.action_space = spaces.Box(act_lower, act_upper)
 
-        if self.control_mode == 'vices':
+        if self.control_mode == "vices":
             control_range = np.ones(9)
             ctrl_ratio = 1.0
             control_freq = 0.5 * ctrl_ratio
@@ -297,7 +297,7 @@ class KitchenV0(robot_env.RobotEnv):
             damping_min = 0.1
             kp_max = 100
             kp_min = 0.05
-            self.sim.model.opt.timestep = .01
+            self.sim.model.opt.timestep = 0.01
             self.controller = JointImpedanceController(
                 control_range, control_freq, kp_max, kp_min, damping_max, damping_min
             )
@@ -797,7 +797,9 @@ class KitchenV0(robot_env.RobotEnv):
 
     def update(self):
         self.controller.update_mass_matrix(self.sim, self.joint_index_vel)
-        self.controller.update_model(self.sim, self.joint_index_pos, self.joint_index_vel)
+        self.controller.update_model(
+            self.sim, self.joint_index_pos, self.joint_index_vel
+        )
 
     def step(
         self,
