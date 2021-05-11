@@ -818,6 +818,7 @@ class KitchenV0(robot_env.RobotEnv):
             if self.control_mode == "end_effector":
                 if not self.initializing:
                     self._set_action(a)
+                    self.sim.step()
             elif self.control_mode == "vices":
                 if not self.initializing:
                     for i in range(int(self.controller.interpolation_steps)):
