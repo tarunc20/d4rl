@@ -199,6 +199,10 @@ class DMRenderer(Renderer):
                 self._physics.data.qpos[i] = val
             for i, val in enumerate(self.mjpy_sim.data.qvel):
                 self._physics.data.qvel[i] = val
+            for i, val in enumerate(self.mjpy_sim.model.body_pos):
+                self._physics.model.body_pos[i] = val
+            for i, val in enumerate(self.mjpy_sim.model.body_quat):
+                self._physics.model.body_quat[i] = val
             self._physics.forward()
         if not self._window:
             self._window = DMRenderWindow(
@@ -244,6 +248,10 @@ class DMRenderer(Renderer):
                 self._physics.data.qpos[i] = val
             for i, val in enumerate(self.mjpy_sim.data.qvel):
                 self._physics.data.qvel[i] = val
+            for i, val in enumerate(self.mjpy_sim.model.body_pos):
+                self._physics.model.body_pos[i] = val
+            for i, val in enumerate(self.mjpy_sim.model.body_quat):
+                self._physics.model.body_quat[i] = val
             self._physics.forward()
         mujoco = module.get_dm_mujoco()
         # TODO(michaelahn): Consider caching the camera.
