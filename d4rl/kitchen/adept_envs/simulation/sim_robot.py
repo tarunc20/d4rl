@@ -101,10 +101,10 @@ class MujocoSimRobot:
             return module.get_mujoco_py_mjlib()
 
     def _patch_mjlib_accessors(self, model, data):
-        """Adds accessors to the DM Control objects to support mujoco_py API."""
-        assert self._use_dm_backend
+        """Adds accessors to the DM Control objects to support mujoco_py API.
+        obtained from https://github.com/openai/mujoco-py/blob/master/mujoco_py/generated/wrappers.pxi
+        """
         mjlib = self.get_mjlib()
-
         def name2id(type_name, name):
             obj_id = mjlib.mj_name2id(
                 model.ptr, mjlib.mju_str2Type(type_name.encode()), name.encode()
@@ -143,11 +143,57 @@ class MujocoSimRobot:
         if not hasattr(model, "sensor_name2id"):
             model.sensor_name2id = lambda name: name2id("sensor", name)
 
+        if not hasattr(model, "get_joint_qpos_addr"):
+
+            def get_joint_qpos_addr(name):
+                joint_id = model.joint_name2id(name)
+                joint_type = model.jnt_type[joint_id]
+                joint_addr = model.jnt_qposadr[joint_id]
+                # TODO: remove hardcoded joint ids (find where mjtJoint is)
+                if joint_type == 0:
+                    ndim = 7
+                elif joint_type == 1:
+                    ndim = 4
+                else:
+                    assert joint_type in (2, 3)
+                    ndim = 1
+
+                if ndim == 1:
+                    return joint_addr
+                else:
+                    return (joint_addr, joint_addr + ndim)
+
+            model.get_joint_qpos_addr = lambda name: get_joint_qpos_addr(name)
+
+        if not hasattr(model, "get_joint_qvel_addr"):
+
+            def get_joint_qvel_addr(name):
+                joint_id = model.joint_name2id(name)
+                joint_type = model.jnt_type[joint_id]
+                joint_addr = model.jnt_dofadr[joint_id]
+                if joint_type == 0:
+                    ndim = 6
+                elif joint_type == 1:
+                    ndim = 3
+                else:
+                    assert joint_type in (3, 2)
+                    ndim = 1
+
+                if ndim == 1:
+                    return joint_addr
+                else:
+                    return (joint_addr, joint_addr + ndim)
+
+            model.get_joint_qvel_addr = lambda name: get_joint_qvel_addr(name)
+
         if not hasattr(data, "body_xpos"):
             data.body_xpos = data.xpos
 
         if not hasattr(data, "body_xquat"):
             data.body_xquat = data.xquat
+
+        if not hasattr(data, "body_xmat"):
+            data.body_xmat = data.xmat
 
         if not hasattr(data, "get_body_xpos"):
             data.get_body_xpos = lambda name: data.body_xpos[model.body_name2id(name)]
@@ -156,9 +202,9 @@ class MujocoSimRobot:
             data.get_body_xquat = lambda name: data.body_xquat[model.body_name2id(name)]
 
         if not hasattr(data, "get_body_xmat"):
-            data.get_body_xmat = lambda name: data.xmat[
-                model.body_name2id(name)
-            ].reshape(3, 3)
+            data.get_body_xmat = lambda name: data.xmat[model.body_name2id(name)].reshape(
+                (3, 3)
+            )
 
         if not hasattr(data, "get_geom_xpos"):
             data.get_geom_xpos = lambda name: data.geom_xpos[model.geom_name2id(name)]
@@ -167,33 +213,42 @@ class MujocoSimRobot:
             data.get_geom_xquat = lambda name: data.geom_xquat[model.geom_name2id(name)]
 
         if not hasattr(data, "get_joint_qpos"):
-            data.get_joint_qpos = lambda name: data.qpos[model.joint_name2id(name)]
+
+            def get_joint_qpos(name):
+                addr = model.get_joint_qpos_addr(name)
+                if isinstance(addr, (int, np.int32, np.int64)):
+                    return data.qpos[addr]
+                else:
+                    start_i, end_i = addr
+                    return data.qpos[start_i:end_i]
+
+            data.get_joint_qpos = lambda name: get_joint_qpos(name)
 
         if not hasattr(data, "set_joint_qpos"):
 
             def set_joint_qpos(name, value):
-                data.qpos[
-                    model.joint_name2id(name) : model.joint_name2id(name)
-                    + value.shape[0]
-                ] = value
+                addr = model.get_joint_qpos_addr(name)
+                if isinstance(addr, (int, np.int32, np.int64)):
+                    data.qpos[addr] = value
+                else:
+                    start_i, end_i = addr
+                    value = np.array(value)
+                    assert value.shape == (
+                        end_i - start_i,
+                    ), "Value has incorrect shape %s: %s" % (name, value)
+                    data.qpos[start_i:end_i] = value
 
             data.set_joint_qpos = lambda name, value: set_joint_qpos(name, value)
 
         if not hasattr(data, "get_site_xmat"):
             data.get_site_xmat = lambda name: data.site_xmat[
                 model.site_name2id(name)
-            ].reshape(3, 3)
-
-        if not hasattr(model, "get_joint_qpos_addr"):
-            model.get_joint_qpos_addr = lambda name: model.joint_name2id(name)
-
-        if not hasattr(model, "get_joint_qvel_addr"):
-            model.get_joint_qvel_addr = lambda name: model.joint_name2id(name)
+            ].reshape((3, 3))
 
         if not hasattr(data, "get_geom_xmat"):
             data.get_geom_xmat = lambda name: data.geom_xmat[
                 model.geom_name2id(name)
-            ].reshape(3, 3)
+            ].reshape((3, 3))
 
         if not hasattr(data, "get_mocap_pos"):
             data.get_mocap_pos = lambda name: data.mocap_pos[
@@ -250,11 +305,51 @@ class MujocoSimRobot:
             data.site_xvelr = site_xvelr()
 
         if not hasattr(data, "get_site_jacp"):
-            data.get_site_jacp = lambda name: site_jacp()[
-                model.site_name2id(name)
-            ].reshape(3, model.nv)
+            data.get_site_jacp = lambda name: site_jacp()[model.site_name2id(name)].reshape(
+                (3, model.nv)
+            )
 
         if not hasattr(data, "get_site_jacr"):
-            data.get_site_jacr = lambda name: site_jacr()[
-                model.site_name2id(name)
-            ].reshape(3, model.nv)
+            data.get_site_jacr = lambda name: site_jacr()[model.site_name2id(name)].reshape(
+                (3, model.nv)
+            )
+
+        def body_jacp():
+            jacps = np.zeros((model.nbody, 3 * model.nv))
+            for i, jacp in enumerate(jacps):
+                jacp_view = jacp
+                mjlib.mj_jacBody(model.ptr, data.ptr, jacp_view, None, i)
+            return jacps
+
+        def body_xvelp():
+            jacp = body_jacp().reshape((model.nbody, 3, model.nv))
+            xvelp = np.dot(jacp, data.qvel)
+            return xvelp
+
+        def body_jacr():
+            jacrs = np.zeros((model.nbody, 3 * model.nv))
+            for i, jacr in enumerate(jacrs):
+                jacr_view = jacr
+                mjlib.mj_jacBody(model.ptr, data.ptr, None, jacr_view, i)
+            return jacrs
+
+        def body_xvelr():
+            jacp = body_jacr().reshape((model.nbody, 3, model.nv))
+            xvelp = np.dot(jacp, data.qvel)
+            return xvelp
+
+        if not hasattr(data, "body_xvelp"):
+            data.body_xvelp = body_xvelp()
+
+        if not hasattr(data, "body_xvelr"):
+            data.body_xvelr = body_xvelr()
+
+        if not hasattr(data, "get_body_jacp"):
+            data.get_body_jacp = lambda name: body_jacp()[model.body_name2id(name)].reshape(
+                (3, model.nv)
+            )
+
+        if not hasattr(data, "get_body_jacr"):
+            data.get_body_jacr = lambda name: body_jacr()[model.body_name2id(name)].reshape(
+                (3, model.nv)
+            )
