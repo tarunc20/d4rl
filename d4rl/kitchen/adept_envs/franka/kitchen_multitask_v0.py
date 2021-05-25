@@ -284,9 +284,9 @@ class KitchenV0(robot_env.RobotEnv):
             self.action_space = spaces.Box(act_lower, act_upper)
 
         if self.control_mode == "end_effector":
-            # 3 for xyz, 4 for quaternion, 2 for gripper
-            act_lower = -1 * np.ones((9,))
-            act_upper = 1 * np.ones((9,))
+            # 3 for xyz, 3 for rpy, 1 for gripper
+            act_lower = -1 * np.ones((7,))
+            act_upper = 1 * np.ones((7,))
             self.action_space = spaces.Box(act_lower, act_upper)
 
         # if self.control_mode == "vices":
@@ -432,7 +432,12 @@ class KitchenV0(robot_env.RobotEnv):
         action = action.copy()
         pos_ctrl, rot_ctrl, gripper_ctrl = action[:3], action[3:7], action[7:9]
 
-        pos_ctrl *= 0.05
+
+        if self.control_mode == 'primitives':
+            pos_ctrl *= 0.05
+        elif self.control_mode == 'end_effector':
+            pos_ctrl *= 0.02
+            rot_ctrl *= 0.05
         assert gripper_ctrl.shape == (2,)
         action = np.concatenate([pos_ctrl, rot_ctrl, gripper_ctrl])
 
@@ -853,8 +858,14 @@ class KitchenV0(robot_env.RobotEnv):
             a = np.clip(a, -1.0, 1.0)
             if self.control_mode == "end_effector":
                 if not self.initializing:
-                    self._set_action(a)
-                    for i in range(16):
+                    rotation = self.quat_to_rpy(self.sim.data.body_xquat[10]) - np.array(a[3:6])
+                    target_pos = a[:3] + self.get_ee_pose()
+                    target_pos = np.clip(target_pos, self.min_ee_pos, self.max_ee_pos)
+                    a[:3] = target_pos - self.get_ee_pose()
+                    for _ in range(32):
+                        quat = self.rpy_to_quat(rotation)
+                        quat_delta = self.convert_xyzw_to_wxyz(quat) - self.sim.data.body_xquat[10]
+                        self._set_action(np.concatenate([ a[:3], quat_delta, [a[-1], -a[-1]] ]))
                         self.sim.step()
             elif self.control_mode == "vices":
                 if not self.initializing:
