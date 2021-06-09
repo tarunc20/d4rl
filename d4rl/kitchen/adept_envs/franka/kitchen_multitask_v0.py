@@ -16,7 +16,10 @@
 # limitations under the License.
 import copy
 import os
-from robosuite_vices.controllers.arm_controller import JointImpedanceController, PositionController
+try:
+    from robosuite_vices.controllers.arm_controller import JointImpedanceController, PositionController
+except:
+    pass
 
 import cv2
 import mujoco_py
