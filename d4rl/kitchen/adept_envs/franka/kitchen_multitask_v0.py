@@ -152,20 +152,20 @@ class KitchenV0(robot_env.RobotEnv):
             rotate_about_x_axis=self.rotate_about_x_axis,
         )
         self.primitive_name_to_action_idx = dict(
-            angled_x_y_grasp=[0, 1, 2],
-            move_delta_ee_pose=[3, 4, 5],
-            rotate_about_y_axis=6,
-            lift=7,
-            drop=8,
-            move_left=9,
-            move_right=10,
-            move_forward=11,
-            move_backward=12,
-            rotate_about_x_axis=13,
-            open_gripper=[],  # doesn't matter
-            close_gripper=[],  # doesn't matter
+            angled_x_y_grasp=[0, 1, 2, 3],
+            move_delta_ee_pose=[4, 5, 6],
+            rotate_about_y_axis=7,
+            lift=8,
+            drop=9,
+            move_left=10,
+            move_right=11,
+            move_forward=12,
+            move_backward=13,
+            rotate_about_x_axis=14,
+            open_gripper=15,  # doesn't matter
+            close_gripper=16,  # doesn't matter
         )
-        self.max_arg_len = 14
+        self.max_arg_len = 17
         self.num_primitives = len(self.primitive_name_to_func)
         self.image_obs = image_obs
         self.imwidth = imwidth
@@ -292,27 +292,6 @@ class KitchenV0(robot_env.RobotEnv):
             act_upper = 1 * np.ones((7,))
             self.action_space = spaces.Box(act_lower, act_upper)
 
-        # if self.control_mode == "vices":
-        #     control_range = np.ones(9)
-        #     ctrl_ratio = 1.0
-        #     control_freq = 0.5 * ctrl_ratio
-        #     damping_max = 2
-        #     damping_min = 0.1
-        #     kp_max = 100
-        #     kp_min = 0.05
-        #     self.sim.model.opt.timestep = 0.01
-        #     self.controller = JointImpedanceController(
-        #         control_range, control_freq, kp_max, kp_min, damping_max, damping_min
-        #     )
-        #     self.joint_index_vel = np.arange(9)
-        #     self.joint_index_pos = np.arange(9)
-        #     self.controller.update_mass_matrix(self.sim, self.joint_index_vel)
-        #     self.controller.update_model(
-        #         self.sim, self.joint_index_pos, self.joint_index_vel
-        #     )
-        #     high = np.ones(27)
-        #     low = -high
-        #     self.action_space = spaces.Box(low=low, high=high, dtype=np.float32)
         if self.control_mode == "vices":
             self.action_space = spaces.Box(-np.ones(10), np.ones(10))
             ctrl_ratio = 1.0
@@ -477,13 +456,14 @@ class KitchenV0(robot_env.RobotEnv):
 
     def close_gripper(
         self,
-        unusued=None,
+        d,
         render_every_step=False,
         render_mode="rgb_array",
         render_im_shape=(1000, 1000),
     ):
+        d = np.abs(d)*.04
         for _ in range(200):
-            self._set_action(np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]))
+            self._set_action(np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -d, -d]))
             self.sim.step()
             if render_every_step:
                 if render_mode == "rgb_array":
@@ -505,13 +485,14 @@ class KitchenV0(robot_env.RobotEnv):
 
     def open_gripper(
         self,
-        unusued=None,
+        d,
         render_every_step=False,
         render_mode="rgb_array",
         render_im_shape=(1000, 1000),
     ):
+        d = np.abs(d)*.04
         for _ in range(200):
-            self._set_action(np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.04, 0.04]))
+            self._set_action(np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, d, d]))
             self.sim.step()
             if render_every_step:
                 if render_mode == "rgb_array":
@@ -643,12 +624,12 @@ class KitchenV0(robot_env.RobotEnv):
 
     def angled_x_y_grasp(
         self,
-        angle_and_xy,
+        angle_and_xyd,
         render_every_step=False,
         render_mode="rgb_array",
         render_im_shape=(1000, 1000),
     ):
-        angle, x_dist, y_dist = angle_and_xy
+        angle, x_dist, y_dist, d_dist = angle_and_xyd
         angle = np.clip(angle, -np.pi, np.pi)
         rotation = self.quat_to_rpy(self.sim.data.body_xquat[10]) - np.array(
             [angle, 0, 0]
@@ -672,6 +653,7 @@ class KitchenV0(robot_env.RobotEnv):
             render_im_shape=render_im_shape,
         )
         self.close_gripper(
+            d_dist,
             render_every_step=render_every_step,
             render_mode=render_mode,
             render_im_shape=render_im_shape,
