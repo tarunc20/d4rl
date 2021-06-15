@@ -16,6 +16,7 @@
 # limitations under the License.
 import copy
 import os
+
 try:
     from robosuite_vices.controllers.arm_controller import JointImpedanceController, PositionController
 except:
@@ -1004,7 +1005,6 @@ class KitchenV0(robot_env.RobotEnv):
         self.set_mocap_quat("mocap", mocap_quat)
         self.sim.forward()
         self.step_count = step_count
-
 
 class KitchenTaskRelaxV1(KitchenV0):
     """Kitchen environment with proper camera and goal setup"""

@@ -41,6 +41,7 @@
             <geom class="oven_collision" type="box" pos="0 0 .038" size=".014 .048 .018" mass=".01"/>
             <geom class="oven_collision" type="cylinder" pos="0 0 .013" size=".05 .008" mass=".01"/>
             <site type="sphere" name="knob1_site" pos="0 0 .038" size=".01" group="3" rgba="1 1 0 1"/>
+
         </body>
         <body name="Burner 1" pos="0.206 -0.119 0.61">
             <inertial pos="0 0 0" mass=".01" diaginertia="0.001 0.001 0.001"/>
@@ -56,6 +57,7 @@
             <geom class="oven_collision" type="box" pos="0 0 .038" size=".014 .048 .018" mass=".01"/>
             <geom class="oven_collision" type="cylinder" pos="0 0 .013" size=".05 .008" mass=".01"/>
             <site type="sphere" name="knob2_site" pos="0 0 .038" size=".01" group="3" rgba="0 0 1 1"/>
+
         </body>
         <body name="Burner 2" pos="-0.24 -0.119 0.61">
             <inertial pos="0 0 0" mass=".01" diaginertia="0.001 0.001 0.001"/>
@@ -86,6 +88,7 @@
             <geom class="oven_collision" type="box" pos="0 0 .038" size=".014 .048 .018" mass=".01"/>
             <geom class="oven_collision" type="cylinder" pos="0 0 .013" size=".05 .008" mass=".01"/>
             <site type="sphere" name="knob4_site" pos="0 0 .038" size=".01" group="3" rgba="1 0 0 1"/>
+            <site name="tlbhandle" pos="0 .0 .04" rgba="0 0 1 1" size=".02"/>
         </body>
         <body name="Burner 4" pos="-0.237 0.322 0.61">
             <inertial pos="0 0 0" mass=".01" diaginertia="0.001 0.001 0.001"/>

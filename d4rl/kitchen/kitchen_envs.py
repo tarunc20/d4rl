@@ -120,7 +120,19 @@ class KitchenBase(KitchenTaskRelaxV1):
                 next_obj_obs[..., element_idx - idx_offset] - OBS_ELEMENT_GOALS[element]
             )
             dense += -1 * distance  # reward must be negative distance for RL
-            complete = distance < BONUS_THRESH
+            is_grasped = True
+
+            if element == 'slide cabinet':
+                is_grasped = False
+                if not self.initializing:
+                    obj_pos = self.get_site_xpos("schandle")
+                    left_pad = self.get_site_xpos('leftpad')
+                    right_pad = self.get_site_xpos('rightpad')
+                    within_sphere_left = np.linalg.norm(obj_pos-left_pad) < .05
+                    within_sphere_right = np.linalg.norm(obj_pos-right_pad) < .05
+                    if right_pad[0] < obj_pos[0] and obj_pos[0] < left_pad[0] and within_sphere_right and within_sphere_left:
+                        is_grasped = True
+            complete = distance < BONUS_THRESH and is_grasped
             if complete:
                 completions.append(element)
         if self.REMOVE_TASKS_WHEN_COMPLETE:
