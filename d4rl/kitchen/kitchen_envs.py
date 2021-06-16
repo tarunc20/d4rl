@@ -125,13 +125,16 @@ class KitchenBase(KitchenTaskRelaxV1):
             if element == 'slide cabinet':
                 is_grasped = False
                 if not self.initializing:
-                    obj_pos = self.get_site_xpos("schandle")
-                    left_pad = self.get_site_xpos('leftpad')
-                    right_pad = self.get_site_xpos('rightpad')
-                    within_sphere_left = np.linalg.norm(obj_pos-left_pad) < .05
-                    within_sphere_right = np.linalg.norm(obj_pos-right_pad) < .05
-                    if right_pad[0] < obj_pos[0] and obj_pos[0] < left_pad[0] and within_sphere_right and within_sphere_left:
-                        is_grasped = True
+                    for i in range(1, 6):
+                        obj_pos = self.get_site_xpos("schandle{}".format(i))
+                        left_pad = self.get_site_xpos('leftpad')
+                        right_pad = self.get_site_xpos('rightpad')
+                        within_sphere_left = np.linalg.norm(obj_pos-left_pad) < .07
+                        within_sphere_right = np.linalg.norm(obj_pos-right_pad) < .07
+                        right = right_pad[0] < obj_pos[0]
+                        left = obj_pos[0] < left_pad[0]
+                        if right and left and within_sphere_right and within_sphere_left:
+                            is_grasped = True
             if element == 'top left burner':
                 is_grasped = False
                 if not self.initializing:
@@ -145,25 +148,27 @@ class KitchenBase(KitchenTaskRelaxV1):
             if element == 'microwave':
                 is_grasped = False
                 if not self.initializing:
-                    obj_pos = self.get_site_xpos("mchandle")
-                    left_pad = self.get_site_xpos('leftpad')
-                    right_pad = self.get_site_xpos('rightpad')
-                    within_sphere_left = np.linalg.norm(obj_pos-left_pad) < .05
-                    within_sphere_right = np.linalg.norm(obj_pos-right_pad) < .05
-                    if right_pad[0] < obj_pos[0] and obj_pos[0] < left_pad[0] and within_sphere_right and within_sphere_left:
-                        is_grasped = True
-
+                    for i in range(1, 6):
+                        obj_pos = self.get_site_xpos("mchandle{}".format(i))
+                        left_pad = self.get_site_xpos('leftpad')
+                        right_pad = self.get_site_xpos('rightpad')
+                        within_sphere_left = np.linalg.norm(obj_pos-left_pad) < .05
+                        within_sphere_right = np.linalg.norm(obj_pos-right_pad) < .05
+                        if right_pad[0] < obj_pos[0] and obj_pos[0] < left_pad[0] and within_sphere_right and within_sphere_left:
+                            is_grasped = True
             if element == 'hinge cabinet':
                 is_grasped = False
                 if not self.initializing:
-                    obj_pos = self.get_site_xpos("hchandle")
-                    left_pad = self.get_site_xpos('leftpad')
-                    right_pad = self.get_site_xpos('rightpad')
-                    within_sphere_left = np.linalg.norm(obj_pos-left_pad) < .06
-                    within_sphere_right = np.linalg.norm(obj_pos-right_pad) < .06
-                    if right_pad[0] < obj_pos[0] and obj_pos[0] < left_pad[0] and within_sphere_right:
-                        is_grasped = True
+                    for i in range(1, 6):
+                        obj_pos = self.get_site_xpos("hchandle{}".format(i))
+                        left_pad = self.get_site_xpos('leftpad')
+                        right_pad = self.get_site_xpos('rightpad')
+                        within_sphere_left = np.linalg.norm(obj_pos-left_pad) < .06
+                        within_sphere_right = np.linalg.norm(obj_pos-right_pad) < .06
+                        if right_pad[0] < obj_pos[0] and obj_pos[0] < left_pad[0] and within_sphere_right:
+                            is_grasped = True
                 pass
+            print(is_grasped)
             complete = distance < BONUS_THRESH and is_grasped
             if complete:
                 completions.append(element)
