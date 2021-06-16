@@ -107,6 +107,9 @@
                 <geom pos="0.0252 -0.06 0" euler="-1.57 -.4 0" size="0.02 0.035" type="capsule"/>
                 <geom class="oven_collision" euler="-1.57 -.4 0" pos="0.0263 -0.065 0" size="0.021 0.03" type="capsule" mass=".01"/>
                 <site type="sphere" name="light_site" pos="0.0315 -0.075 0" size=".01" group="3" rgba="1 0 0 1"/>
+                <site name="lshandle1" pos="0.0315 -0.075 0" rgba="0 0 1 1" size=".025"/>
+                <site name="lshandle2" pos="0.0425 -0.1 0" rgba="0 0 1 1" size=".025"/>
+                <site name="lshandle3" pos="0.0225 -0.05 0" rgba="0 0 1 1" size=".025"/>
             </body>
         </body>
         <body name="lightblock_hinge" pos="-0.0044 -0.3 -0.1361">
