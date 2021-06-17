@@ -105,6 +105,7 @@ class MujocoSimRobot:
         obtained from https://github.com/openai/mujoco-py/blob/master/mujoco_py/generated/wrappers.pxi
         """
         mjlib = self.get_mjlib()
+
         def name2id(type_name, name):
             obj_id = mjlib.mj_name2id(
                 model.ptr, mjlib.mju_str2Type(type_name.encode()), name.encode()
@@ -202,9 +203,9 @@ class MujocoSimRobot:
             data.get_body_xquat = lambda name: data.body_xquat[model.body_name2id(name)]
 
         if not hasattr(data, "get_body_xmat"):
-            data.get_body_xmat = lambda name: data.xmat[model.body_name2id(name)].reshape(
-                (3, 3)
-            )
+            data.get_body_xmat = lambda name: data.xmat[
+                model.body_name2id(name)
+            ].reshape((3, 3))
 
         if not hasattr(data, "get_geom_xpos"):
             data.get_geom_xpos = lambda name: data.geom_xpos[model.geom_name2id(name)]
@@ -305,14 +306,14 @@ class MujocoSimRobot:
             data.site_xvelr = site_xvelr()
 
         if not hasattr(data, "get_site_jacp"):
-            data.get_site_jacp = lambda name: site_jacp()[model.site_name2id(name)].reshape(
-                (3, model.nv)
-            )
+            data.get_site_jacp = lambda name: site_jacp()[
+                model.site_name2id(name)
+            ].reshape((3, model.nv))
 
         if not hasattr(data, "get_site_jacr"):
-            data.get_site_jacr = lambda name: site_jacr()[model.site_name2id(name)].reshape(
-                (3, model.nv)
-            )
+            data.get_site_jacr = lambda name: site_jacr()[
+                model.site_name2id(name)
+            ].reshape((3, model.nv))
 
         def body_jacp():
             jacps = np.zeros((model.nbody, 3 * model.nv))
@@ -345,11 +346,11 @@ class MujocoSimRobot:
             data.body_xvelr = body_xvelr()
 
         if not hasattr(data, "get_body_jacp"):
-            data.get_body_jacp = lambda name: body_jacp()[model.body_name2id(name)].reshape(
-                (3, model.nv)
-            )
+            data.get_body_jacp = lambda name: body_jacp()[
+                model.body_name2id(name)
+            ].reshape((3, model.nv))
 
         if not hasattr(data, "get_body_jacr"):
-            data.get_body_jacr = lambda name: body_jacr()[model.body_name2id(name)].reshape(
-                (3, model.nv)
-            )
+            data.get_body_jacr = lambda name: body_jacr()[
+                model.body_name2id(name)
+            ].reshape((3, model.nv))
