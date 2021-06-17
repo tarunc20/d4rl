@@ -68,7 +68,7 @@
 
                                         <geom size="0.0185 0.0120 0.0175" pos="0 0.014 0.015" type="box" euler='.03 0 0' />
 
-                                        <site name='leftpad' pos='0 0.01 0.08' rgba='0 1 0 1' size='.015'/>
+                                        <site name='leftpad' pos='0 0.01 0.08' rgba='0 1 0 0' size='.015'/>
 
                                     </body>
                                     <body name="panda0_rightfinger" pos="0 0 0.1654" quat="0.92388 0 0 -0.382683"  childclass='panda_finger'>
@@ -97,7 +97,7 @@
 
                                         <geom size="0.0185 0.0120 0.0175" pos="0 -.014 0.015" type="box" euler='-.03 0 0' />
 
-                                        <site name='rightpad' pos='0 -0.01 0.08' rgba='0 1 0 1' size='.015'/>
+                                        <site name='rightpad' pos='0 -0.01 0.08' rgba='0 1 0 0' size='.015'/>
                                     </body>
                                 </body>
                             </body>

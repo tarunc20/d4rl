@@ -109,12 +109,14 @@ class KitchenV0(robot_env.RobotEnv):
         normalize_proprioception_obs=False,
         use_workspace_limits=True,
         control_mode="primitives",
+        use_grasp_rewards=False,
     ):
         self.control_mode = control_mode
         self.MODEL = self.CTLR_MODES_DICT[self.control_mode]["model"]
         self.ROBOTS = self.CTLR_MODES_DICT[self.control_mode]["robot"]
         self.episodic_cumulative_reward = 0
         self.obs_dict = {}
+        self.use_grasp_rewards=use_grasp_rewards
         # self.robot_noise_ratio = 0.1  # 10% as per robot_config specs
         self.robot_noise_ratio = 0.0  # 10% as per robot_config specs
         self.goal = np.zeros((30,))

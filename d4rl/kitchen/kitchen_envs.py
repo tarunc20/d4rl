@@ -110,7 +110,6 @@ class KitchenBase(KitchenTaskRelaxV1):
         reward_dict, score = super(KitchenBase, self)._get_reward_n_score(obs_dict)
         next_q_obs = obs_dict["qp"]
         next_obj_obs = obs_dict["obj_qp"]
-        next_goal = obs_dict["goal"]
         idx_offset = len(next_q_obs)
         completions = []
         dense = 0
@@ -180,6 +179,8 @@ class KitchenBase(KitchenTaskRelaxV1):
                         within_sphere_right = np.linalg.norm(obj_pos-right_pad) < .03
                         if within_sphere_right and within_sphere_left:
                             is_grasped = True
+            if not self.use_grasp_rewards:
+                is_grasped = True # is_grasped is basically ignored if we are not using grasp_rewards
             complete = distance < BONUS_THRESH and is_grasped
             if complete:
                 completions.append(element)
