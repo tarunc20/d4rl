@@ -206,7 +206,7 @@ class KitchenBase(KitchenTaskRelaxV1):
             ]
             info[element + " success"] = success
             if len(self.TASK_ELEMENTS) == 1 and self.TASK_ELEMENTS[0] == element:
-                info['success'] = success
+                info["success"] = success
         info["episodic cumulative reward"] = self.episodic_cumulative_reward
         return info
 
