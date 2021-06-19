@@ -508,76 +508,48 @@ class KitchenV0(robot_env.RobotEnv):
 
     def rotate_about_x_axis(self, angle):
         rotation = self.quat_to_rpy(self.get_ee_quat()) - np.array([angle, 0, 0])
-        self.rotate_ee(
-            rotation,
-        )
+        self.rotate_ee(rotation)
 
     def angled_x_y_grasp(self, angle_and_xyd):
         angle, x_dist, y_dist, d_dist = angle_and_xyd
         angle = np.clip(angle, -np.pi, np.pi)
         rotation = self.quat_to_rpy(self.get_ee_quat()) - np.array([angle, 0, 0])
-        self.rotate_ee(
-            rotation,
-        )
-        self.goto_pose(
-            self.get_ee_pose() + np.array([x_dist, 0.0, 0]),
-        )
-        self.goto_pose(
-            self.get_ee_pose() + np.array([0.0, y_dist, 0]),
-        )
-        self.close_gripper(
-            d_dist,
-        )
+        self.rotate_ee(rotation)
+        self.goto_pose(self.get_ee_pose() + np.array([x_dist, 0.0, 0]))
+        self.goto_pose(self.get_ee_pose() + np.array([0.0, y_dist, 0]))
+        self.close_gripper(d_dist)
 
     def move_delta_ee_pose(self, pose):
-        self.goto_pose(
-            self.get_ee_pose() + pose,
-        )
+        self.goto_pose(self.get_ee_pose() + pose)
 
     def rotate_about_y_axis(self, angle):
         angle = np.clip(angle, -np.pi, np.pi)
-        rotation = self.quat_to_rpy(self.get_ee_quat()) - np.array(
-            [0, 0, angle],
-        )
-        self.rotate_ee(
-            rotation,
-        )
+        rotation = self.quat_to_rpy(self.get_ee_quat()) - np.array([0, 0, angle])
+        self.rotate_ee(rotation)
 
     def lift(self, z_dist):
         z_dist = np.maximum(z_dist, 0.0)
-        self.goto_pose(
-            self.get_ee_pose() + np.array([0.0, 0.0, z_dist]),
-        )
+        self.goto_pose(self.get_ee_pose() + np.array([0.0, 0.0, z_dist]))
 
     def drop(self, z_dist):
         z_dist = np.maximum(z_dist, 0.0)
-        self.goto_pose(
-            self.get_ee_pose() + np.array([0.0, 0.0, -z_dist]),
-        )
+        self.goto_pose(self.get_ee_pose() + np.array([0.0, 0.0, -z_dist]))
 
     def move_left(self, x_dist):
         x_dist = np.maximum(x_dist, 0.0)
-        self.goto_pose(
-            self.get_ee_pose() + np.array([-x_dist, 0.0, 0.0]),
-        )
+        self.goto_pose(self.get_ee_pose() + np.array([-x_dist, 0.0, 0.0]))
 
     def move_right(self, x_dist):
         x_dist = np.maximum(x_dist, 0.0)
-        self.goto_pose(
-            self.get_ee_pose() + np.array([x_dist, 0.0, 0.0]),
-        )
+        self.goto_pose(self.get_ee_pose() + np.array([x_dist, 0.0, 0.0]))
 
     def move_forward(self, y_dist):
         y_dist = np.maximum(y_dist, 0.0)
-        self.goto_pose(
-            self.get_ee_pose() + np.array([0.0, y_dist, 0.0]),
-        )
+        self.goto_pose(self.get_ee_pose() + np.array([0.0, y_dist, 0.0]))
 
     def move_backward(self, y_dist):
         y_dist = np.maximum(y_dist, 0.0)
-        self.goto_pose(
-            self.get_ee_pose() + np.array([0.0, -y_dist, 0.0]),
-        )
+        self.goto_pose(self.get_ee_pose() + np.array([0.0, -y_dist, 0.0]))
 
     def break_apart_action(self, a):
         broken_a = {}
@@ -629,16 +601,16 @@ class KitchenV0(robot_env.RobotEnv):
         render_im_shape=(1000, 1000),
     ):
         self.set_render_every_step(render_every_step, render_mode, render_im_shape)
-        if self.control_mode in [
-            "joint_position",
-            "joint_velocity",
-            "torque",
-            "end_effector",
-            "vices",
-        ]:
-            a = np.clip(a, -1.0, 1.0)
-            if self.control_mode == "end_effector":
-                if not self.initializing:
+        if not self.initializing:
+            if self.control_mode in [
+                "joint_position",
+                "joint_velocity",
+                "torque",
+                "end_effector",
+                "vices",
+            ]:
+                a = np.clip(a, -1.0, 1.0)
+                if self.control_mode == "end_effector":
                     rotation = self.quat_to_rpy(self.get_ee_quat()) - np.array(a[3:6])
                     target_pos = a[:3] + self.get_ee_pose()
                     target_pos = np.clip(target_pos, self.min_ee_pos, self.max_ee_pos)
@@ -652,8 +624,7 @@ class KitchenV0(robot_env.RobotEnv):
                             np.concatenate([a[:3], quat_delta, [a[-1], -a[-1]]])
                         )
                         self.sim.step()
-            elif self.control_mode == "vices":
-                if not self.initializing:
+                elif self.control_mode == "vices":
                     action = a
                     for i in range(int(self.controller.interpolation_steps)):
                         self.controller.update_model(
@@ -668,19 +639,16 @@ class KitchenV0(robot_env.RobotEnv):
                         act[-2] = action[-1]
                         act[:7] = a
                         self.do_simulation(act, n_frames=1)
+                else:
+                    if self.control_mode == "joint_velocity":
+                        a = self.act_mid + a * self.act_amp  # mean center and scale
+                    self.robot.step(
+                        self, a, step_duration=self.skip * self.model.opt.timestep
+                    )
             else:
-                if not self.initializing and self.control_mode == "joint_velocity":
-                    a = self.act_mid + a * self.act_amp  # mean center and scale
-                self.robot.step(
-                    self, a, step_duration=self.skip * self.model.opt.timestep
-                )
-        else:
-            if not self.initializing:
                 if render_every_step and render_mode == "rgb_array":
                     self.img_array = []
-                self.act(
-                    a,
-                )
+                self.act(a)
         obs = self._get_obs()
 
         # rewards
