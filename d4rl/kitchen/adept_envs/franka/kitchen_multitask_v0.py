@@ -432,7 +432,6 @@ class KitchenV0(robot_env.RobotEnv):
                         self.render_mode,
                         self.render_im_shape[0],
                         self.render_im_shape[1],
-                        original=True,
                     )
                 )
             else:
@@ -440,7 +439,6 @@ class KitchenV0(robot_env.RobotEnv):
                     self.render_mode,
                     self.render_im_shape[0],
                     self.render_im_shape[1],
-                    original=True,
                 )
 
     def close_gripper(self, d):
