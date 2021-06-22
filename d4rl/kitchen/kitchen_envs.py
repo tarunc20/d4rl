@@ -103,15 +103,16 @@ class KitchenBase(KitchenTaskRelaxV1):
                             is_grasped = True
                 if element == "top left burner":
                     is_grasped = False
-                    obj_pos = self.get_site_xpos("tlbhandle")
-                    left_pad = self.get_site_xpos("leftpad")
-                    right_pad = self.get_site_xpos("rightpad")
-                    within_sphere_left = np.linalg.norm(obj_pos - left_pad) < 0.035
-                    within_sphere_right = np.linalg.norm(obj_pos - right_pad) < 0.04
-                    right = right_pad[0] < obj_pos[0]
-                    left = obj_pos[0] < left_pad[0]
-                    if within_sphere_right and within_sphere_left and right and left:
-                        is_grasped = True
+                    for i in range(1, 4):
+                        obj_pos = self.get_site_xpos("tlbhandle{}".format(i))
+                        left_pad = self.get_site_xpos("leftpad")
+                        right_pad = self.get_site_xpos("rightpad")
+                        within_sphere_left = np.linalg.norm(obj_pos - left_pad) < 0.05
+                        within_sphere_right = np.linalg.norm(obj_pos - right_pad) < 0.05
+                        right = right_pad[0] < obj_pos[0]
+                        left = obj_pos[0] < left_pad[0]
+                        if within_sphere_right and within_sphere_left and right and left:
+                            is_grasped = True
                 if element == "microwave":
                     is_grasped = False
                     for i in range(1, 6):
@@ -147,8 +148,8 @@ class KitchenBase(KitchenTaskRelaxV1):
                         obj_pos = self.get_site_xpos("lshandle{}".format(i))
                         left_pad = self.get_site_xpos("leftpad")
                         right_pad = self.get_site_xpos("rightpad")
-                        within_sphere_left = np.linalg.norm(obj_pos - left_pad) < 0.045
-                        within_sphere_right = np.linalg.norm(obj_pos - right_pad) < 0.03
+                        within_sphere_left = np.linalg.norm(obj_pos - left_pad) < 0.05
+                        within_sphere_right = np.linalg.norm(obj_pos - right_pad) < 0.05
                         if within_sphere_right and within_sphere_left:
                             is_grasped = True
             complete = distance < BONUS_THRESH and is_grasped
