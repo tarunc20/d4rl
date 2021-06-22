@@ -20,7 +20,6 @@ OBS_ELEMENT_GOALS = {
     "microwave": np.array([-0.75]),
     "kettle": np.array([-0.23, 0.75, 1.62, 0.99, 0.0, 0.0, -0.06]),
 }
-BONUS_THRESH = 0.3
 
 
 class KitchenBase(KitchenTaskRelaxV1):
@@ -29,6 +28,8 @@ class KitchenBase(KitchenTaskRelaxV1):
     TASK_ELEMENTS = []
     REMOVE_TASKS_WHEN_COMPLETE = False
     TERMINATE_ON_TASK_COMPLETE = False
+    BONUS_THRESH = 0.3
+
 
     def __init__(self, dense=True, **kwargs):
         self.tasks_to_complete = set(self.TASK_ELEMENTS)
@@ -152,7 +153,7 @@ class KitchenBase(KitchenTaskRelaxV1):
                         within_sphere_right = np.linalg.norm(obj_pos - right_pad) < 0.05
                         if within_sphere_right and within_sphere_left:
                             is_grasped = True
-            complete = distance < BONUS_THRESH and is_grasped
+            complete = distance < self.BONUS_THRESH and is_grasped
             if complete:
                 completions.append(element)
         if self.REMOVE_TASKS_WHEN_COMPLETE:
@@ -199,8 +200,8 @@ class KitchenBase(KitchenTaskRelaxV1):
                 next_obj_obs[..., element_idx - idx_offset] - OBS_ELEMENT_GOALS[element]
             )
             info[element + " distance to goal"] = distance
-            info[element + " success"] = float(distance < BONUS_THRESH)
-            success = float(distance < BONUS_THRESH)
+            info[element + " success"] = float(distance < self.BONUS_THRESH)
+            success = float(distance < self.BONUS_THRESH)
             self.per_task_cumulative_reward[element] += success
             info[element + " cumulative reward"] = self.per_task_cumulative_reward[
                 element
@@ -233,6 +234,7 @@ class KitchenMicrowaveV0(KitchenBase):
 
 class KitchenKettleV0(KitchenBase):
     TASK_ELEMENTS = ["kettle"]
+    BONUS_THRESH = .15
 
 
 class KitchenBottomLeftBurnerV0(KitchenBase):
