@@ -209,6 +209,11 @@ class KitchenBase(KitchenTaskRelaxV1):
             info[element + " success"] = success
             if len(self.TASK_ELEMENTS) == 1 and self.TASK_ELEMENTS[0] == element:
                 info["success"] = success
+        if self.control_mode == 'primitives' and not self.initializing:
+            for primitive_name in self.primitive_idx_to_name.values():
+                info['episode  {} call count'.format(primitive_name)] = self.episode_primitive_count[primitive_name]
+                info['lifetime {} call count'.format(primitive_name)] = self.lifetime_primitive_count[primitive_name]
+            info['episode unique primitives called'] = sum([1 for v in self.episode_primitive_count.values() if v > 0])
         info["episodic cumulative reward"] = self.episodic_cumulative_reward
         return info
 

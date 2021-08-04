@@ -14,6 +14,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from collections import Counter
 import copy
 import os
 
@@ -305,6 +306,8 @@ class KitchenV0(robot_env.RobotEnv):
             self.set_mocap_quat("mocap", gripper_rotation)
             for _ in range(10):
                 self.sim.step()
+            self.episode_primitive_count = Counter()
+            self.lifetime_primitive_count = Counter()
 
         self.init_qpos = INIT_QPOS
         self.init_qvel = self.sim.model.key_qvel[0].copy()
@@ -573,6 +576,8 @@ class KitchenV0(robot_env.RobotEnv):
             primitive(
                 primitive_action,
             )
+            self.episode_primitive_count[primitive_name] += 1
+            self.lifetime_primitive_count[primitive_name] += 1
 
     def update(self):
         self.controller.update_mass_matrix(self.sim, self.joint_index_vel)
@@ -693,6 +698,7 @@ class KitchenV0(robot_env.RobotEnv):
         self.sim.forward()
         if self.control_mode in ["primitives", "end_effector"]:
             self.reset_mocap2body_xpos(self.sim)
+            self.episode_primitive_count = Counter()
 
         self.goal = self._get_task_goal()  # sample a new goal on reset
 
