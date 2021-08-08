@@ -53,9 +53,14 @@ class KitchenBase(KitchenTaskRelaxV1):
             img = img.transpose(2, 0, 1).flatten()
             return img
         else:
-            return np.concatenate(
-                [self.obs_dict["qp"], self.obs_dict["obj_qp"], self.obs_dict["goal"]]
-            )
+            if self.control_mode == 'end_effector':
+                return np.concatenate(
+                    [self.get_ee_6d_pose(), qp[8:10], self.obs_dict["obj_qp"],]
+                )
+            else:
+                return np.concatenate(
+                    [self.obs_dict["qp"], self.obs_dict["obj_qp"],]
+                )
 
     def _get_task_goal(self):
         new_goal = np.zeros_like(self.goal)
@@ -209,6 +214,7 @@ class KitchenBase(KitchenTaskRelaxV1):
             info[element + " success"] = success
             if len(self.TASK_ELEMENTS) == 1 and self.TASK_ELEMENTS[0] == element:
                 info["success"] = success
+                info['distance'] = distance #only for ndp
         if self.control_mode == 'primitives' and not self.initializing:
             for primitive_name in self.primitive_idx_to_name.values():
                 info['episode  {} call count'.format(primitive_name)] = self.episode_primitive_count[primitive_name]

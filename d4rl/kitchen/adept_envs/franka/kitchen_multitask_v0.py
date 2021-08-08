@@ -140,7 +140,9 @@ class KitchenV0(robot_env.RobotEnv):
         use_workspace_limits=True,
         control_mode="primitives",
         use_grasp_rewards=False,
+        target_mode=False,
     ):
+        self.target_mode = target_mode
         self.control_mode = control_mode
         self.MODEL = self.CTLR_MODES_DICT[self.control_mode]["model"]
         self.ROBOTS = self.CTLR_MODES_DICT[self.control_mode]["robot"]
@@ -314,6 +316,12 @@ class KitchenV0(robot_env.RobotEnv):
 
     def get_ee_pose(self):
         return self.get_site_xpos("end_effector")
+
+    def get_ee_6d_pose(self):
+        ee_pos = self.get_ee_pose()
+        ee_quat = self.get_ee_quat()
+        ee_rpy = self.quat_to_rpy(ee_quat)
+        return np.concatenate((ee_pos, ee_rpy))
 
     def get_ee_quat(self):
         return self.sim.data.body_xquat[10]
@@ -616,19 +624,37 @@ class KitchenV0(robot_env.RobotEnv):
             ]:
                 a = np.clip(a, -1.0, 1.0)
                 if self.control_mode == "end_effector":
-                    rotation = self.quat_to_rpy(self.get_ee_quat()) - np.array(a[3:6])
-                    target_pos = a[:3] + self.get_ee_pose()
-                    target_pos = np.clip(target_pos, self.min_ee_pos, self.max_ee_pos)
-                    a[:3] = target_pos - self.get_ee_pose()
-                    for _ in range(32):
-                        quat = self.rpy_to_quat(rotation)
-                        quat_delta = (
-                            self.convert_xyzw_to_wxyz(quat) - self.get_ee_quat()
-                        )
-                        self._set_action(
-                            np.concatenate([a[:3], quat_delta, [a[-1], -a[-1]]])
-                        )
-                        self.sim.step()
+                    if self.target_mode:
+                        target_pos = a[:3]
+                        target_pos = np.clip(target_pos, self.min_ee_pos, self.max_ee_pos)
+                        quat = self.rpy_to_quat(a[3:6])
+                        target_gripper_pos = a[-1]
+                        for _ in range(32):
+                            quat_delta = (
+                                self.convert_xyzw_to_wxyz(quat) - self.get_ee_quat()
+                            )
+                            a[:3] = target_pos - self.get_ee_pose()
+                            gripper_pos = self.sim.data.qpos[8]
+                            gripper_ctrl = target_gripper_pos - gripper_pos
+                            gripper_ctrl = a[-1]
+                            self._set_action(
+                                np.concatenate([a[:3], quat_delta, [gripper_ctrl, -gripper_ctrl]])
+                            )
+                            self.sim.step()
+                    else:
+                        rotation = self.quat_to_rpy(self.get_ee_quat()) - np.array(a[3:6])
+                        target_pos = a[:3] + self.get_ee_pose()
+                        target_pos = np.clip(target_pos, self.min_ee_pos, self.max_ee_pos)
+                        a[:3] = target_pos - self.get_ee_pose()
+                        for _ in range(32):
+                            quat = self.rpy_to_quat(rotation)
+                            quat_delta = (
+                                self.convert_xyzw_to_wxyz(quat) - self.get_ee_quat()
+                            )
+                            self._set_action(
+                                np.concatenate([a[:3], quat_delta, [a[-1], -a[-1]]])
+                            )
+                            self.sim.step()
                 elif self.control_mode == "vices":
                     action = a
                     for i in range(int(self.controller.interpolation_steps)):
@@ -670,27 +696,6 @@ class KitchenV0(robot_env.RobotEnv):
         self.unset_render_every_step()
         return obs, reward_dict["r_total"], done, env_info
 
-    def _get_obs(self):
-        t, qp, qv, obj_qp, obj_qv = self.robot.get_obs(
-            self, robot_noise_ratio=self.robot_noise_ratio
-        )
-
-        self.obs_dict = {}
-        self.obs_dict["t"] = t
-        self.obs_dict["qp"] = qp
-        self.obs_dict["qv"] = qv
-        self.obs_dict["obj_qp"] = obj_qp
-        self.obs_dict["obj_qv"] = obj_qv
-        self.obs_dict["goal"] = self.goal
-        if self.image_obs:
-            img = self.render(mode="rgb_array")
-            img = img.transpose(2, 0, 1).flatten()
-            return img
-        else:
-            return np.concatenate(
-                [self.obs_dict["qp"], self.obs_dict["obj_qp"], self.obs_dict["goal"]]
-            )
-
     def reset_model(self):
         reset_pos = self.init_qpos[:].copy()
         reset_vel = self.init_qvel[:].copy()
@@ -702,19 +707,20 @@ class KitchenV0(robot_env.RobotEnv):
 
         self.goal = self._get_task_goal()  # sample a new goal on reset
 
-        if self.sim_robot._use_dm_backend:
-            imwidth = self.imwidth
-            imheight = self.imheight
-            camera = engine.MovableCamera(self.sim, imwidth, imheight)
-            camera.set_pose(
-                distance=2.2, lookat=[-0.2, 0.5, 2.0], azimuth=70, elevation=-35
-            )
-            self.start_img = camera.render()
-        else:
-            self.start_img = self.sim_robot.renderer.render_offscreen(
-                self.imwidth,
-                self.imheight,
-            )
+        if self.image_obs:
+            if self.sim_robot._use_dm_backend:
+                imwidth = self.imwidth
+                imheight = self.imheight
+                camera = engine.MovableCamera(self.sim, imwidth, imheight)
+                camera.set_pose(
+                    distance=2.2, lookat=[-0.2, 0.5, 2.0], azimuth=70, elevation=-35
+                )
+                self.start_img = camera.render()
+            else:
+                self.start_img = self.sim_robot.renderer.render_offscreen(
+                    self.imwidth,
+                    self.imheight,
+                )
         return self._get_obs()
 
     def evaluate_success(self, paths):
