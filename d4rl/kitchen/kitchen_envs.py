@@ -30,7 +30,6 @@ class KitchenBase(KitchenTaskRelaxV1):
     TERMINATE_ON_TASK_COMPLETE = False
     BONUS_THRESH = 0.3
 
-
     def __init__(self, dense=True, **kwargs):
         self.tasks_to_complete = set(self.TASK_ELEMENTS)
         self.dense = dense
@@ -53,13 +52,20 @@ class KitchenBase(KitchenTaskRelaxV1):
             img = img.transpose(2, 0, 1).flatten()
             return img
         else:
-            if self.control_mode == 'end_effector':
+            if self.control_mode == "end_effector":
                 return np.concatenate(
-                    [self.get_ee_6d_pose(), qp[8:10], self.obs_dict["obj_qp"],]
+                    [
+                        self.get_ee_6d_pose(),
+                        qp[8:10],
+                        self.obs_dict["obj_qp"],
+                    ]
                 )
             else:
                 return np.concatenate(
-                    [self.obs_dict["qp"], self.obs_dict["obj_qp"],]
+                    [
+                        self.obs_dict["qp"],
+                        self.obs_dict["obj_qp"],
+                    ]
                 )
 
     def _get_task_goal(self):
@@ -117,7 +123,12 @@ class KitchenBase(KitchenTaskRelaxV1):
                         within_sphere_right = np.linalg.norm(obj_pos - right_pad) < 0.05
                         right = right_pad[0] < obj_pos[0]
                         left = obj_pos[0] < left_pad[0]
-                        if within_sphere_right and within_sphere_left and right and left:
+                        if (
+                            within_sphere_right
+                            and within_sphere_left
+                            and right
+                            and left
+                        ):
                             is_grasped = True
                 if element == "microwave":
                     is_grasped = False
@@ -214,13 +225,22 @@ class KitchenBase(KitchenTaskRelaxV1):
             info[element + " success"] = success
             if len(self.TASK_ELEMENTS) == 1 and self.TASK_ELEMENTS[0] == element:
                 info["success"] = success
-                info['distance'] = distance #only for ndp
-        if self.control_mode == 'primitives' and not self.initializing:
+                info["distance"] = distance  # only for ndp
+        if self.control_mode == "primitives" and not self.initializing:
             for primitive_name in self.primitive_idx_to_name.values():
-                info['episode  {} call count'.format(primitive_name)] = self.episode_primitive_count[primitive_name]
-                info['lifetime {} call count'.format(primitive_name)] = self.lifetime_primitive_count[primitive_name]
-            info['episode unique primitives called'] = sum([1 for v in self.episode_primitive_count.values() if v > 0])
+                info[
+                    "episode {} call count".format(primitive_name)
+                ] = self.episode_primitive_count[primitive_name]
+                info[
+                    "lifetime {} call count".format(primitive_name)
+                ] = self.lifetime_primitive_count[primitive_name]
+            info["episode unique primitives called"] = sum(
+                [1 for v in self.episode_primitive_count.values() if v > 0]
+            )
         info["episodic cumulative reward"] = self.episodic_cumulative_reward
+        info["num low level steps"] = self.low_level_step_counter // 32
+        info["num low level steps true"] = self.low_level_step_counter
+        self.low_level_step_counter = 0
         return info
 
 
@@ -245,7 +265,7 @@ class KitchenMicrowaveV0(KitchenBase):
 
 class KitchenKettleV0(KitchenBase):
     TASK_ELEMENTS = ["kettle"]
-    BONUS_THRESH = .15
+    BONUS_THRESH = 0.15
 
 
 class KitchenBottomLeftBurnerV0(KitchenBase):

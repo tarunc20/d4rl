@@ -21,10 +21,10 @@ import os
 from gym.spaces.box import Box
 
 try:
+    import robosuite_vices
     from robosuite_vices.controllers.arm_controller import PositionController
 except:
     pass
-
 import cv2
 import mujoco_py
 import numpy as np
@@ -141,7 +141,12 @@ class KitchenV0(robot_env.RobotEnv):
         control_mode="primitives",
         use_grasp_rewards=False,
         target_mode=False,
+        reward_delay=1,
+        use_dummy_primitive=True,
+        use_six_dof_dummy=False,
     ):
+        self.reward_delay = reward_delay
+        self.count = 0
         self.target_mode = target_mode
         self.control_mode = control_mode
         self.MODEL = self.CTLR_MODES_DICT[self.control_mode]["model"]
@@ -158,49 +163,138 @@ class KitchenV0(robot_env.RobotEnv):
         self.imheight = imheight
         self.action_scale = action_scale
 
-        self.primitive_idx_to_name = {
-            0: "angled_x_y_grasp",
-            1: "move_delta_ee_pose",
-            2: "rotate_about_y_axis",
-            3: "lift",
-            4: "drop",
-            5: "move_left",
-            6: "move_right",
-            7: "move_forward",
-            8: "move_backward",
-            9: "open_gripper",
-            10: "close_gripper",
-            11: "rotate_about_x_axis",
-        }
-        self.primitive_name_to_func = dict(
-            angled_x_y_grasp=self.angled_x_y_grasp,
-            move_delta_ee_pose=self.move_delta_ee_pose,
-            rotate_about_y_axis=self.rotate_about_y_axis,
-            lift=self.lift,
-            drop=self.drop,
-            move_left=self.move_left,
-            move_right=self.move_right,
-            move_forward=self.move_forward,
-            move_backward=self.move_backward,
-            open_gripper=self.open_gripper,
-            close_gripper=self.close_gripper,
-            rotate_about_x_axis=self.rotate_about_x_axis,
-        )
-        self.primitive_name_to_action_idx = dict(
-            angled_x_y_grasp=[0, 1, 2, 3],
-            move_delta_ee_pose=[4, 5, 6],
-            rotate_about_y_axis=7,
-            lift=8,
-            drop=9,
-            move_left=10,
-            move_right=11,
-            move_forward=12,
-            move_backward=13,
-            rotate_about_x_axis=14,
-            open_gripper=15,
-            close_gripper=16,
-        )
-        self.max_arg_len = 17
+        self.low_level_step_counter = 0
+
+        if use_dummy_primitive:
+            if use_six_dof_dummy:
+                self.primitive_idx_to_name = {
+                    0: "angled_x_y_grasp",
+                    1: "six_dof_delta",
+                    2: "rotate_about_y_axis",
+                    3: "lift",
+                    4: "drop",
+                    5: "move_left",
+                    6: "move_right",
+                    7: "move_forward",
+                    8: "move_backward",
+                    9: "open_gripper",
+                    10: "close_gripper",
+                    11: "rotate_about_x_axis",
+                }
+                self.primitive_name_to_func = dict(
+                    angled_x_y_grasp=self.angled_x_y_grasp,
+                    six_dof_delta=self.six_dof_delta,
+                    rotate_about_y_axis=self.rotate_about_y_axis,
+                    lift=self.lift,
+                    drop=self.drop,
+                    move_left=self.move_left,
+                    move_right=self.move_right,
+                    move_forward=self.move_forward,
+                    move_backward=self.move_backward,
+                    open_gripper=self.open_gripper,
+                    close_gripper=self.close_gripper,
+                    rotate_about_x_axis=self.rotate_about_x_axis,
+                )
+                self.primitive_name_to_action_idx = dict(
+                    angled_x_y_grasp=[0, 1, 2, 3],
+                    six_dof_delta=[4, 5, 6, 7, 8, 9],
+                    rotate_about_y_axis=10,
+                    lift=11,
+                    drop=12,
+                    move_left=13,
+                    move_right=14,
+                    move_forward=15,
+                    move_backward=16,
+                    rotate_about_x_axis=17,
+                    open_gripper=18,
+                    close_gripper=19,
+                )
+                self.max_arg_len = 20
+            else:
+                self.primitive_idx_to_name = {
+                    0: "angled_x_y_grasp",
+                    1: "move_delta_ee_pose",
+                    2: "rotate_about_y_axis",
+                    3: "lift",
+                    4: "drop",
+                    5: "move_left",
+                    6: "move_right",
+                    7: "move_forward",
+                    8: "move_backward",
+                    9: "open_gripper",
+                    10: "close_gripper",
+                    11: "rotate_about_x_axis",
+                }
+                self.primitive_name_to_func = dict(
+                    angled_x_y_grasp=self.angled_x_y_grasp,
+                    move_delta_ee_pose=self.move_delta_ee_pose,
+                    rotate_about_y_axis=self.rotate_about_y_axis,
+                    lift=self.lift,
+                    drop=self.drop,
+                    move_left=self.move_left,
+                    move_right=self.move_right,
+                    move_forward=self.move_forward,
+                    move_backward=self.move_backward,
+                    open_gripper=self.open_gripper,
+                    close_gripper=self.close_gripper,
+                    rotate_about_x_axis=self.rotate_about_x_axis,
+                )
+                self.primitive_name_to_action_idx = dict(
+                    angled_x_y_grasp=[0, 1, 2, 3],
+                    move_delta_ee_pose=[4, 5, 6],
+                    rotate_about_y_axis=7,
+                    lift=8,
+                    drop=9,
+                    move_left=10,
+                    move_right=11,
+                    move_forward=12,
+                    move_backward=13,
+                    rotate_about_x_axis=14,
+                    open_gripper=15,
+                    close_gripper=16,
+                )
+                self.max_arg_len = 17
+        else:
+            self.primitive_idx_to_name = {
+                0: "angled_x_y_grasp",
+                1: "rotate_about_y_axis",
+                2: "lift",
+                3: "drop",
+                4: "move_left",
+                5: "move_right",
+                6: "move_forward",
+                7: "move_backward",
+                8: "open_gripper",
+                9: "close_gripper",
+                10: "rotate_about_x_axis",
+            }
+            self.primitive_name_to_func = dict(
+                angled_x_y_grasp=self.angled_x_y_grasp,
+                rotate_about_y_axis=self.rotate_about_y_axis,
+                lift=self.lift,
+                drop=self.drop,
+                move_left=self.move_left,
+                move_right=self.move_right,
+                move_forward=self.move_forward,
+                move_backward=self.move_backward,
+                open_gripper=self.open_gripper,
+                close_gripper=self.close_gripper,
+                rotate_about_x_axis=self.rotate_about_x_axis,
+            )
+            self.primitive_name_to_action_idx = dict(
+                angled_x_y_grasp=[0, 1, 2, 3],
+                rotate_about_y_axis=4,
+                lift=5,
+                drop=6,
+                move_left=7,
+                move_right=8,
+                move_forward=9,
+                move_backward=10,
+                rotate_about_x_axis=11,
+                open_gripper=12,
+                close_gripper=13,
+            )
+            self.max_arg_len = 14
         self.num_primitives = len(self.primitive_name_to_func)
 
         self.min_ee_pos = np.array([-0.9, 0, 1.5])
@@ -458,6 +552,7 @@ class KitchenV0(robot_env.RobotEnv):
             self._set_action(np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -d, -d]))
             self.sim.step()
             self.call_render_every_step()
+            self.low_level_step_counter += 1
 
     def open_gripper(
         self,
@@ -468,6 +563,7 @@ class KitchenV0(robot_env.RobotEnv):
             self._set_action(np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, d, d]))
             self.sim.step()
             self.call_render_every_step()
+            self.low_level_step_counter += 1
 
     def rotate_ee(self, rpy):
         gripper = self.sim.data.qpos[7:9]
@@ -491,6 +587,7 @@ class KitchenV0(robot_env.RobotEnv):
             )
             self.sim.step()
             self.call_render_every_step()
+            self.low_level_step_counter += 1
 
     def goto_pose(self, pose):
         gripper = self.sim.data.qpos[7:9]
@@ -516,6 +613,7 @@ class KitchenV0(robot_env.RobotEnv):
             )
             self.sim.step()
             self.call_render_every_step()
+            self.low_level_step_counter += 1
 
     def rotate_about_x_axis(self, angle):
         rotation = self.quat_to_rpy(self.get_ee_quat()) - np.array([angle, 0, 0])
@@ -529,6 +627,30 @@ class KitchenV0(robot_env.RobotEnv):
         self.goto_pose(self.get_ee_pose() + np.array([x_dist, 0.0, 0]))
         self.goto_pose(self.get_ee_pose() + np.array([0.0, y_dist, 0]))
         self.close_gripper(d_dist)
+
+    def six_dof_delta(self, xyzrpy):
+        target_rpy = self.quat_to_rpy(self.get_ee_quat()) - xyzrpy[3:6]
+        target_pos = xyzrpy[:3] + self.get_ee_pose()
+        if self.use_workspace_limits:
+            target_pos = np.clip(target_pos, self.min_ee_pos, self.max_ee_pos)
+        gripper = self.sim.data.qpos[7:9]
+        for _ in range(300):
+            self.reset_mocap2body_xpos(self.sim)
+            pos_delta = target_pos - self.get_ee_pose()
+            quat = self.rpy_to_quat(target_rpy)
+            quat_delta = self.convert_xyzw_to_wxyz(quat) - self.get_ee_quat()
+            self._set_action(
+                np.concatenate(
+                    [
+                        pos_delta,
+                        quat_delta,
+                        gripper,
+                    ]
+                )
+            )
+            self.sim.step()
+            self.call_render_every_step()
+            self.low_level_step_counter += 1
 
     def move_delta_ee_pose(self, pose):
         self.goto_pose(self.get_ee_pose() + pose)
@@ -626,7 +748,9 @@ class KitchenV0(robot_env.RobotEnv):
                 if self.control_mode == "end_effector":
                     if self.target_mode:
                         target_pos = a[:3]
-                        target_pos = np.clip(target_pos, self.min_ee_pos, self.max_ee_pos)
+                        target_pos = np.clip(
+                            target_pos, self.min_ee_pos, self.max_ee_pos
+                        )
                         quat = self.rpy_to_quat(a[3:6])
                         target_gripper_pos = a[-1]
                         for _ in range(32):
@@ -638,13 +762,19 @@ class KitchenV0(robot_env.RobotEnv):
                             gripper_ctrl = target_gripper_pos - gripper_pos
                             gripper_ctrl = a[-1]
                             self._set_action(
-                                np.concatenate([a[:3], quat_delta, [gripper_ctrl, -gripper_ctrl]])
+                                np.concatenate(
+                                    [a[:3], quat_delta, [gripper_ctrl, -gripper_ctrl]]
+                                )
                             )
                             self.sim.step()
                     else:
-                        rotation = self.quat_to_rpy(self.get_ee_quat()) - np.array(a[3:6])
+                        rotation = self.quat_to_rpy(self.get_ee_quat()) - np.array(
+                            a[3:6]
+                        )
                         target_pos = a[:3] + self.get_ee_pose()
-                        target_pos = np.clip(target_pos, self.min_ee_pos, self.max_ee_pos)
+                        target_pos = np.clip(
+                            target_pos, self.min_ee_pos, self.max_ee_pos
+                        )
                         a[:3] = target_pos - self.get_ee_pose()
                         for _ in range(32):
                             quat = self.rpy_to_quat(rotation)
@@ -694,6 +824,12 @@ class KitchenV0(robot_env.RobotEnv):
             "score": score,
         }
         self.unset_render_every_step()
+        if self.reward_delay > 1:
+            if self.count % self.reward_delay == 0:
+                self.obs_dict_old = self.obs_dict
+            obs_dict = self.obs_dict_old
+            reward_dict, score = self._get_reward_n_score(obs_dict)
+            self.count += 1
         return obs, reward_dict["r_total"], done, env_info
 
     def reset_model(self):
@@ -721,6 +857,7 @@ class KitchenV0(robot_env.RobotEnv):
                     self.imwidth,
                     self.imheight,
                 )
+
         return self._get_obs()
 
     def evaluate_success(self, paths):
