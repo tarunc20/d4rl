@@ -144,6 +144,8 @@ class KitchenV0(robot_env.RobotEnv):
         reward_delay=1,
         use_dummy_primitive=True,
         use_six_dof_dummy=False,
+        collect_primitives_info=False,
+        render_intermediate_obs_to_info=False,
     ):
         self.reward_delay = reward_delay
         self.count = 0
@@ -162,6 +164,9 @@ class KitchenV0(robot_env.RobotEnv):
         self.imwidth = imwidth
         self.imheight = imheight
         self.action_scale = action_scale
+        self.render_intermediate_obs_to_info = render_intermediate_obs_to_info
+        self.collect_primitives_info = collect_primitives_info
+        self.primitives_info = {}
 
         self.low_level_step_counter = 0
 
@@ -524,6 +529,9 @@ class KitchenV0(robot_env.RobotEnv):
             rot_ctrl *= 0.05
         assert gripper_ctrl.shape == (2,)
         action = np.concatenate([pos_ctrl, rot_ctrl, gripper_ctrl])
+        self.primitives_info["actions"].append(
+            np.concatenate([pos_ctrl, rot_ctrl, gripper_ctrl])
+        )
 
         # Apply action to simulation.
         self.ctrl_set_action(action)
@@ -553,6 +561,13 @@ class KitchenV0(robot_env.RobotEnv):
             self.sim.step()
             self.call_render_every_step()
             self.low_level_step_counter += 1
+            if self.render_intermediate_obs_to_info:
+                obs = self.render(
+                    "rgb_array",
+                    self.render_im_shape[0],
+                    self.render_im_shape[1],
+                )
+                self.primitives_info["observations"].append(obs.astype(np.uint8))
 
     def open_gripper(
         self,
@@ -564,6 +579,13 @@ class KitchenV0(robot_env.RobotEnv):
             self.sim.step()
             self.call_render_every_step()
             self.low_level_step_counter += 1
+            if self.render_intermediate_obs_to_info:
+                obs = self.render(
+                    "rgb_array",
+                    self.render_im_shape[0],
+                    self.render_im_shape[1],
+                )
+                self.primitives_info["observations"].append(obs.astype(np.uint8))
 
     def rotate_ee(self, rpy):
         gripper = self.sim.data.qpos[7:9]
@@ -588,6 +610,13 @@ class KitchenV0(robot_env.RobotEnv):
             self.sim.step()
             self.call_render_every_step()
             self.low_level_step_counter += 1
+            if self.render_intermediate_obs_to_info:
+                obs = self.render(
+                    "rgb_array",
+                    self.render_im_shape[0],
+                    self.render_im_shape[1],
+                )
+                self.primitives_info["observations"].append(obs.astype(np.uint8))
 
     def goto_pose(self, pose):
         gripper = self.sim.data.qpos[7:9]
@@ -614,6 +643,13 @@ class KitchenV0(robot_env.RobotEnv):
             self.sim.step()
             self.call_render_every_step()
             self.low_level_step_counter += 1
+            if self.render_intermediate_obs_to_info:
+                obs = self.render(
+                    "rgb_array",
+                    self.render_im_shape[0],
+                    self.render_im_shape[1],
+                )
+                self.primitives_info["observations"].append(obs.astype(np.uint8))
 
     def rotate_about_x_axis(self, angle):
         rotation = self.quat_to_rpy(self.get_ee_quat()) - np.array([angle, 0, 0])
@@ -809,6 +845,12 @@ class KitchenV0(robot_env.RobotEnv):
             else:
                 if render_every_step and render_mode == "rgb_array":
                     self.img_array = []
+                self.img_array = []
+                self.primitives_info = {}
+                self.primitives_info["actions"] = []
+                self.primitives_info["robot-states"] = []
+                self.primitives_info["observations"] = []
+                self.primitives_info["arguments"] = []
                 self.act(a)
         obs = self._get_obs()
 
@@ -830,6 +872,8 @@ class KitchenV0(robot_env.RobotEnv):
             obs_dict = self.obs_dict_old
             reward_dict, score = self._get_reward_n_score(obs_dict)
             self.count += 1
+        if self.collect_primitives_info:
+            env_info.update(self.primitives_info)
         return obs, reward_dict["r_total"], done, env_info
 
     def reset_model(self):
