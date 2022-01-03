@@ -146,6 +146,7 @@ class KitchenV0(robot_env.RobotEnv):
         use_six_dof_dummy=False,
         collect_primitives_info=False,
         render_intermediate_obs_to_info=False,
+        num_low_level_actions_per_primitive=10,
     ):
         self.reward_delay = reward_delay
         self.count = 0
@@ -167,6 +168,8 @@ class KitchenV0(robot_env.RobotEnv):
         self.render_intermediate_obs_to_info = render_intermediate_obs_to_info
         self.collect_primitives_info = collect_primitives_info
         self.primitives_info = {}
+        self.combined_prev_action = np.zeros(7)
+        self.num_low_level_actions_per_primitive = num_low_level_actions_per_primitive
 
         self.low_level_step_counter = 0
 
@@ -229,6 +232,20 @@ class KitchenV0(robot_env.RobotEnv):
                     9: "open_gripper",
                     10: "close_gripper",
                     11: "rotate_about_x_axis",
+                }
+                self.primitive_idx_to_num_low_level_steps = {
+                    0: 1200,
+                    1: 300,
+                    2: 300,
+                    3: 300,
+                    4: 300,
+                    5: 300,
+                    6: 300,
+                    7: 300,
+                    8: 300,
+                    9: 300,
+                    10: 300,
+                    11: 300,
                 }
                 self.primitive_name_to_func = dict(
                     angled_x_y_grasp=self.angled_x_y_grasp,
@@ -529,15 +546,26 @@ class KitchenV0(robot_env.RobotEnv):
             rot_ctrl *= 0.05
         assert gripper_ctrl.shape == (2,)
         action = np.concatenate([pos_ctrl, rot_ctrl, gripper_ctrl])
-        self.primitives_info["actions"].append(
-            np.concatenate([pos_ctrl, rot_ctrl, gripper_ctrl])
-        )
+        self.combined_prev_action += np.concatenate((pos_ctrl, rot_ctrl))
+        if (self.primitive_step_counter+1) % (self.num_low_level_steps // self.num_low_level_actions_per_primitive) == 0:
+            self.primitives_info["actions"].append(
+                np.concatenate([self.combined_prev_action, gripper_ctrl])
+            )
+            self.combined_prev_action = np.zeros_like(self.combined_prev_action)
 
         # Apply action to simulation.
         self.ctrl_set_action(action)
         self.mocap_set_action(self.sim, action)
 
     def call_render_every_step(self):
+        if self.render_intermediate_obs_to_info:
+            if (self.primitive_step_counter+1) % (self.num_low_level_steps // self.num_low_level_actions_per_primitive) == 0:
+                obs = self.render(
+                    "rgb_array",
+                    self.render_im_shape[0],
+                    self.render_im_shape[1],
+                )
+                self.primitives_info["observations"].append(obs.astype(np.uint8))
         if self.render_every_step:
             if self.render_mode == "rgb_array":
                 self.img_array.append(
@@ -555,41 +583,29 @@ class KitchenV0(robot_env.RobotEnv):
                 )
 
     def close_gripper(self, d):
-        d = np.abs(d) * 0.04
-        for _ in range(200):
+        d = np.abs(d) * (.04/self.action_scale)
+        for _ in range(300):
             self._set_action(np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -d, -d]))
             self.sim.step()
             self.call_render_every_step()
             self.low_level_step_counter += 1
-            if self.render_intermediate_obs_to_info:
-                obs = self.render(
-                    "rgb_array",
-                    self.render_im_shape[0],
-                    self.render_im_shape[1],
-                )
-                self.primitives_info["observations"].append(obs.astype(np.uint8))
+            self.primitive_step_counter += 1
 
     def open_gripper(
         self,
         d,
     ):
-        d = np.abs(d) * 0.04
-        for _ in range(200):
+        d = np.abs(d) * (.04/self.action_scale)
+        for _ in range(300):
             self._set_action(np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, d, d]))
             self.sim.step()
-            self.call_render_every_step()
             self.low_level_step_counter += 1
-            if self.render_intermediate_obs_to_info:
-                obs = self.render(
-                    "rgb_array",
-                    self.render_im_shape[0],
-                    self.render_im_shape[1],
-                )
-                self.primitives_info["observations"].append(obs.astype(np.uint8))
+            self.primitive_step_counter += 1
+            self.call_render_every_step()
 
     def rotate_ee(self, rpy):
         gripper = self.sim.data.qpos[7:9]
-        for _ in range(200):
+        for _ in range(300):
             quat = self.rpy_to_quat(rpy)
             quat_delta = self.convert_xyzw_to_wxyz(quat) - self.get_ee_quat()
             self._set_action(
@@ -608,15 +624,9 @@ class KitchenV0(robot_env.RobotEnv):
                 )
             )
             self.sim.step()
-            self.call_render_every_step()
             self.low_level_step_counter += 1
-            if self.render_intermediate_obs_to_info:
-                obs = self.render(
-                    "rgb_array",
-                    self.render_im_shape[0],
-                    self.render_im_shape[1],
-                )
-                self.primitives_info["observations"].append(obs.astype(np.uint8))
+            self.primitive_step_counter += 1
+            self.call_render_every_step()
 
     def goto_pose(self, pose):
         gripper = self.sim.data.qpos[7:9]
@@ -641,15 +651,9 @@ class KitchenV0(robot_env.RobotEnv):
                 )
             )
             self.sim.step()
-            self.call_render_every_step()
             self.low_level_step_counter += 1
-            if self.render_intermediate_obs_to_info:
-                obs = self.render(
-                    "rgb_array",
-                    self.render_im_shape[0],
-                    self.render_im_shape[1],
-                )
-                self.primitives_info["observations"].append(obs.astype(np.uint8))
+            self.primitive_step_counter += 1
+            self.call_render_every_step()
 
     def rotate_about_x_axis(self, angle):
         rotation = self.quat_to_rpy(self.get_ee_quat()) - np.array([angle, 0, 0])
@@ -735,15 +739,17 @@ class KitchenV0(robot_env.RobotEnv):
             a[self.num_primitives :],
         )
         primitive_name = self.primitive_idx_to_name[primitive_idx]
-        if primitive_name != "no_op":
-            primitive_name_to_action_dict = self.break_apart_action(primitive_args)
-            primitive_action = primitive_name_to_action_dict[primitive_name]
-            primitive = self.primitive_name_to_func[primitive_name]
-            primitive(
-                primitive_action,
-            )
-            self.episode_primitive_count[primitive_name] += 1
-            self.lifetime_primitive_count[primitive_name] += 1
+        self.num_low_level_steps = self.primitive_idx_to_num_low_level_steps[
+            primitive_idx
+        ]
+        primitive_name_to_action_dict = self.break_apart_action(primitive_args)
+        primitive_action = primitive_name_to_action_dict[primitive_name]
+        primitive = self.primitive_name_to_func[primitive_name]
+        primitive(
+            primitive_action,
+        )
+        self.episode_primitive_count[primitive_name] += 1
+        self.lifetime_primitive_count[primitive_name] += 1
 
     def update(self):
         self.controller.update_mass_matrix(self.sim, self.joint_index_vel)
@@ -851,6 +857,8 @@ class KitchenV0(robot_env.RobotEnv):
                 self.primitives_info["robot-states"] = []
                 self.primitives_info["observations"] = []
                 self.primitives_info["arguments"] = []
+                self.primitive_step_counter = 0
+                self.combined_prev_action = np.zeros_like(self.combined_prev_action)
                 self.act(a)
         obs = self._get_obs()
 
