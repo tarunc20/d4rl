@@ -584,7 +584,7 @@ class KitchenV0(robot_env.RobotEnv):
 
     def close_gripper(self, d):
         d = np.abs(d) * (.04/self.action_scale)
-        for _ in range(300):
+        for _ in range(200):
             self._set_action(np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -d, -d]))
             self.sim.step()
             self.call_render_every_step()
@@ -596,7 +596,7 @@ class KitchenV0(robot_env.RobotEnv):
         d,
     ):
         d = np.abs(d) * (.04/self.action_scale)
-        for _ in range(300):
+        for _ in range(200):
             self._set_action(np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, d, d]))
             self.sim.step()
             self.low_level_step_counter += 1
@@ -605,7 +605,7 @@ class KitchenV0(robot_env.RobotEnv):
 
     def rotate_ee(self, rpy):
         gripper = self.sim.data.qpos[7:9]
-        for _ in range(300):
+        for _ in range(200):
             quat = self.rpy_to_quat(rpy)
             quat_delta = self.convert_xyzw_to_wxyz(quat) - self.get_ee_quat()
             self._set_action(
