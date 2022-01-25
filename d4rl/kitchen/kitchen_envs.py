@@ -215,25 +215,25 @@ class KitchenBase(KitchenTaskRelaxV1):
             distance = np.linalg.norm(
                 next_obj_obs[..., element_idx - idx_offset] - OBS_ELEMENT_GOALS[element]
             )
-            info[element + " distance to goal"] = distance
-            info[element + " success"] = float(distance < self.BONUS_THRESH)
+            # info[element + " distance to goal"] = distance
+            # info[element + " success"] = float(distance < self.BONUS_THRESH)
             success = float(distance < self.BONUS_THRESH)
             self.per_task_cumulative_reward[element] += success
-            info[element + " cumulative reward"] = self.per_task_cumulative_reward[
-                element
-            ]
-            info[element + " success"] = success
+            # info[element + " cumulative reward"] = self.per_task_cumulative_reward[
+            #     element
+            # ]
+            # info[element + " success"] = success
             if len(self.TASK_ELEMENTS) == 1 and self.TASK_ELEMENTS[0] == element:
                 info["success"] = success
                 info["distance"] = distance  # only for ndp
         if self.control_mode == "primitives" and not self.initializing:
-            for primitive_name in self.primitive_idx_to_name.values():
-                info[
-                    "episode {} call count".format(primitive_name)
-                ] = self.episode_primitive_count[primitive_name]
-                info[
-                    "lifetime {} call count".format(primitive_name)
-                ] = self.lifetime_primitive_count[primitive_name]
+            # for primitive_name in self.primitive_idx_to_name.values():
+            #     info[
+            #         "episode {} call count".format(primitive_name)
+            #     ] = self.episode_primitive_count[primitive_name]
+            #     info[
+            #         "lifetime {} call count".format(primitive_name)
+            #     ] = self.lifetime_primitive_count[primitive_name]
             info["episode unique primitives called"] = sum(
                 [1 for v in self.episode_primitive_count.values() if v > 0]
             )

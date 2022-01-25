@@ -234,18 +234,18 @@ class KitchenV0(robot_env.RobotEnv):
                     11: "rotate_about_x_axis",
                 }
                 self.primitive_idx_to_num_low_level_steps = {
-                    0: 1200,
+                    0: 1000,
                     1: 300,
-                    2: 300,
+                    2: 200,
                     3: 300,
                     4: 300,
                     5: 300,
                     6: 300,
                     7: 300,
                     8: 300,
-                    9: 300,
-                    10: 300,
-                    11: 300,
+                    9: 200,
+                    10: 200,
+                    11: 200,
                 }
                 self.primitive_name_to_func = dict(
                     angled_x_y_grasp=self.angled_x_y_grasp,
@@ -564,7 +564,7 @@ class KitchenV0(robot_env.RobotEnv):
                     "rgb_array",
                     self.render_im_shape[0],
                     self.render_im_shape[1],
-                )
+                ).transpose(2, 0, 1).flatten()
                 self.primitives_info["observations"].append(obs.astype(np.uint8))
         if self.render_every_step:
             if self.render_mode == "rgb_array":
@@ -730,6 +730,14 @@ class KitchenV0(robot_env.RobotEnv):
             broken_a[k] = a[v]
         return broken_a
 
+    def get_primitive_info_from_high_level_action(self, hl):
+        primitive_idx, primitive_args = (
+            np.argmax(hl[: self.num_primitives]),
+            hl[self.num_primitives :],
+        )
+        primitive_name = self.primitive_idx_to_name[primitive_idx]
+        return primitive_name, primitive_args, primitive_idx
+
     def act(self, a):
         if not self.initializing:
             a = a * self.action_scale
@@ -880,7 +888,9 @@ class KitchenV0(robot_env.RobotEnv):
             obs_dict = self.obs_dict_old
             reward_dict, score = self._get_reward_n_score(obs_dict)
             self.count += 1
-        if self.collect_primitives_info:
+        if self.collect_primitives_info and not self.initializing:
+            self.primitives_info["observations"] = np.array(self.primitives_info["observations"])
+            self.primitives_info["actions"] = np.array(self.primitives_info["actions"])
             env_info.update(self.primitives_info)
         return obs, reward_dict["r_total"], done, env_info
 
