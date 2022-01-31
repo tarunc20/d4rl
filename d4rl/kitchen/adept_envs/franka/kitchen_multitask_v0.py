@@ -341,7 +341,7 @@ class KitchenV0(robot_env.RobotEnv):
             self.reset_mocap_welds(self.sim)
             self.sim.forward()
             gripper_target = (
-                np.array([-0.498, 0.005, -0.431 + 0.01]) + self.get_ee_pose()
+                np.array([-0.498, 0.005, -0.431 + 0.01]) + self.get_endeff_pos()
             )
             gripper_rotation = np.array([1.0, 0.0, 1.0, 0.0])
             self.set_mocap_pos("mocap", gripper_target)
@@ -352,11 +352,11 @@ class KitchenV0(robot_env.RobotEnv):
         self.init_qpos = INIT_QPOS
         self.init_qvel = self.sim.model.key_qvel[0].copy()
 
-    def get_ee_pose(self):
+    def get_endeff_pos(self):
         return self.get_site_xpos("end_effector")
 
-    def get_ee_6d_pose(self):
-        ee_pos = self.get_ee_pose()
+    def get_endeff_6d_pose(self):
+        ee_pos = self.get_endeff_pos()
         ee_quat = self.get_ee_quat()
         ee_rpy = self.quat_to_rpy(ee_quat)
         return np.concatenate((ee_pos, ee_rpy))
@@ -555,7 +555,7 @@ class KitchenV0(robot_env.RobotEnv):
             pose = np.clip(pose, self.min_ee_pos, self.max_ee_pos)
 
         def compute_action():
-            delta = pose - self.get_ee_pose()
+            delta = pose - self.get_endeff_pos()
             action = np.array([*delta, *np.zeros(4), *gripper])
             return action
 
@@ -563,13 +563,13 @@ class KitchenV0(robot_env.RobotEnv):
 
     def six_dof_delta(self, xyzrpy):
         gripper = self.sim.data.qpos[7:9]
-        target_pos = xyzrpy[:3] + self.get_ee_pose()
+        target_pos = xyzrpy[:3] + self.get_endeff_pos()
         target_rpy = self.quat_to_rpy(self.get_ee_quat()) - xyzrpy[3:6]
         if self.use_workspace_limits:
             target_pos = np.clip(target_pos, self.min_ee_pos, self.max_ee_pos)
 
         def compute_action():
-            pos_delta = target_pos - self.get_ee_pose()
+            pos_delta = target_pos - self.get_endeff_pos()
             quat = self.rpy_to_quat(target_rpy)
             quat_delta = self.convert_xyzw_to_wxyz(quat) - self.get_ee_quat()
             action = np.array([*pos_delta, *quat_delta, *gripper])
@@ -586,12 +586,12 @@ class KitchenV0(robot_env.RobotEnv):
         angle = np.clip(angle, -np.pi, np.pi)
         rotation = self.quat_to_rpy(self.get_ee_quat()) - np.array([angle, 0, 0])
         self.rotate_ee(rotation)
-        self.goto_pose(self.get_ee_pose() + np.array([x_dist, 0.0, 0]))
-        self.goto_pose(self.get_ee_pose() + np.array([0.0, y_dist, 0]))
+        self.goto_pose(self.get_endeff_pos() + np.array([x_dist, 0.0, 0]))
+        self.goto_pose(self.get_endeff_pos() + np.array([0.0, y_dist, 0]))
         self.close_gripper(d_dist)
 
     def move_delta_ee_pose(self, pose):
-        self.goto_pose(self.get_ee_pose() + pose)
+        self.goto_pose(self.get_endeff_pos() + pose)
 
     def rotate_about_y_axis(self, angle):
         angle = np.clip(angle, -np.pi, np.pi)
@@ -600,27 +600,27 @@ class KitchenV0(robot_env.RobotEnv):
 
     def lift(self, z_dist):
         z_dist = np.maximum(z_dist, 0.0)
-        self.goto_pose(self.get_ee_pose() + np.array([0.0, 0.0, z_dist]))
+        self.goto_pose(self.get_endeff_pos() + np.array([0.0, 0.0, z_dist]))
 
     def drop(self, z_dist):
         z_dist = np.maximum(z_dist, 0.0)
-        self.goto_pose(self.get_ee_pose() + np.array([0.0, 0.0, -z_dist]))
+        self.goto_pose(self.get_endeff_pos() + np.array([0.0, 0.0, -z_dist]))
 
     def move_left(self, x_dist):
         x_dist = np.maximum(x_dist, 0.0)
-        self.goto_pose(self.get_ee_pose() + np.array([-x_dist, 0.0, 0.0]))
+        self.goto_pose(self.get_endeff_pos() + np.array([-x_dist, 0.0, 0.0]))
 
     def move_right(self, x_dist):
         x_dist = np.maximum(x_dist, 0.0)
-        self.goto_pose(self.get_ee_pose() + np.array([x_dist, 0.0, 0.0]))
+        self.goto_pose(self.get_endeff_pos() + np.array([x_dist, 0.0, 0.0]))
 
     def move_forward(self, y_dist):
         y_dist = np.maximum(y_dist, 0.0)
-        self.goto_pose(self.get_ee_pose() + np.array([0.0, y_dist, 0.0]))
+        self.goto_pose(self.get_endeff_pos() + np.array([0.0, y_dist, 0.0]))
 
     def move_backward(self, y_dist):
         y_dist = np.maximum(y_dist, 0.0)
-        self.goto_pose(self.get_ee_pose() + np.array([0.0, -y_dist, 0.0]))
+        self.goto_pose(self.get_endeff_pos() + np.array([0.0, -y_dist, 0.0]))
 
     def break_apart_action(self, a):
         broken_a = {}
@@ -696,7 +696,7 @@ class KitchenV0(robot_env.RobotEnv):
                             quat_delta = (
                                 self.convert_xyzw_to_wxyz(quat) - self.get_ee_quat()
                             )
-                            a[:3] = target_pos - self.get_ee_pose()
+                            a[:3] = target_pos - self.get_endeff_pos()
                             gripper_pos = self.sim.data.qpos[8]
                             gripper_ctrl = target_gripper_pos - gripper_pos
                             gripper_ctrl = a[-1]
@@ -710,11 +710,11 @@ class KitchenV0(robot_env.RobotEnv):
                         rotation = self.quat_to_rpy(self.get_ee_quat()) - np.array(
                             a[3:6]
                         )
-                        target_pos = a[:3] + self.get_ee_pose()
+                        target_pos = a[:3] + self.get_endeff_pos()
                         target_pos = np.clip(
                             target_pos, self.min_ee_pos, self.max_ee_pos
                         )
-                        a[:3] = target_pos - self.get_ee_pose()
+                        a[:3] = target_pos - self.get_endeff_pos()
                         for _ in range(32):
                             quat = self.rpy_to_quat(rotation)
                             quat_delta = (
@@ -818,14 +818,14 @@ class KitchenV0(robot_env.RobotEnv):
         self.obs_dict["obj_qp"] = obj_qp
         self.obs_dict["obj_qv"] = obj_qv
         if self.use_image_obs:
-            img = self.render(mode="rgb_array")
+            img = self.render(mode="rgb_array", imwidth=self.imwidth, imheight=self.imheight)
             img = img.transpose(2, 0, 1).flatten()
             return img
         else:
             if self.control_mode == "end_effector":
                 return np.concatenate(
                     [
-                        self.get_ee_6d_pose(),
+                        self.get_endeff_6d_pose(),
                         qp[8:10],
                         self.obs_dict["obj_qp"],
                     ]
