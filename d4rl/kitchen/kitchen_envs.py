@@ -1,5 +1,4 @@
 """Environments using kitchen and Franka robot."""
-import numpy as np
 from d4rl.kitchen.adept_envs.franka.kitchen_multitask_v0 import KitchenV0
 
 

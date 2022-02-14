@@ -517,6 +517,14 @@ class KitchenV0(robot_env.RobotEnv):
             self.call_render_every_step()
             self.primitive_step_counter += 1
             self._num_low_level_steps_total += 1
+            if (self.primitive_step_counter + 1) % (
+                self.num_low_level_steps // self.num_low_level_actions_per_primitive
+            ) == 0:
+                self.primitives_info["low_level_reward"] = 0 #TODO: change this once we have defined our low level rewards
+            if (self.primitive_step_counter + 1) % (
+                self.num_low_level_steps // self.num_low_level_actions_per_primitive
+            ) == 0:
+                self.primitives_info["low_level_terminal"] = 0 #TODO: change this once we have defined our low level terminals
         return action
 
     def close_gripper(self, d):
@@ -737,6 +745,8 @@ class KitchenV0(robot_env.RobotEnv):
                 self.primitives_info = {}
                 self.primitives_info["low_level_action"] = []
                 self.primitives_info["low_level_obs"] = []
+                self.primitives_info["low_level_reward"] = []
+                self.primitives_info["low_level_terminals"] = []
                 self.primitive_step_counter = 0
                 self.combined_prev_action = np.zeros_like(self.combined_prev_action)
                 self.act(a)
