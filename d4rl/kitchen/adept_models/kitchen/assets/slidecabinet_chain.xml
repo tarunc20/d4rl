@@ -20,7 +20,7 @@
             <site name="schandle5" pos="-.1825 -.1225 -0.1" rgba="0 0 1 0" size=".025"/>
             <geom material="M_slide_metal" euler="1.57 0 0" pos="-0.183 -0.06 -0.114" size="0.019 0.053 0.019" type="cylinder"/>
             <geom material="M_slide_metal" euler="1.57 0 0" pos="-0.183 -0.06 0.114" size="0.019 0.053 0.019" type="cylinder"/>
-            <geom material="M_slide_metal" pos="-0.183 -0.123 0" size="0.022 0.159" type="cylinder"/>
+            <geom name='schandle' material="M_slide_metal" pos="-0.183 -0.123 0" size="0.022 0.159" type="cylinder"/>
             <geom pos="0 -.02 0" size="0.225 0.03 0.195" type="box"/>
 
             <geom class="slide_collision" pos="0 -.02 0" size="0.225 0.03 0.195" type="box" mass=".2"/>

@@ -7,7 +7,7 @@ from d4rl.kitchen.adept_envs.franka.kitchen_multitask_v0 import KitchenTaskRelax
 
 OBS_ELEMENT_INDICES = {
     "bottom left burner": np.array([11, 12]),
-    "top left burner": np.array([15, 16]),
+    "top burner": np.array([15, 16]),
     "light switch": np.array([17, 18]),
     "slide cabinet": np.array([19]),
     "hinge cabinet": np.array([20, 21]),
@@ -16,7 +16,7 @@ OBS_ELEMENT_INDICES = {
 }
 OBS_ELEMENT_GOALS = {
     "bottom left burner": np.array([-0.88, -0.01]),
-    "top left burner": np.array([-0.92, -0.01]),
+    "top burner": np.array([-0.92, -0.01]),
     "light switch": np.array([-0.69, -0.05]),
     "slide cabinet": np.array([0.37]),
     "hinge cabinet": np.array([0.0, 1.45]),
@@ -32,7 +32,25 @@ class KitchenBase(KitchenTaskRelaxV1):
     TASK_ELEMENTS = []
     REMOVE_TASKS_WHEN_COMPLETE = False
     TERMINATE_ON_TASK_COMPLETE = False
-
+    OBS_ELEMENT_INDICES = {
+        'bottom burner': np.array([11, 12]),
+        'top burner': np.array([15, 16]),
+        'light switch': np.array([17, 18]),
+        'slide cabinet': np.array([19]),
+        'hinge cabinet': np.array([20, 21]),
+        'microwave': np.array([22]),
+        'kettle': np.array([23, 24, 25, 26, 27, 28, 29]),
+        }
+    OBS_ELEMENT_GOALS = {
+        'bottom burner': np.array([-0.88, -0.01]),
+        'top burner': np.array([-0.92, -0.01]),
+        'light switch': np.array([-0.69, -0.05]),
+        'slide cabinet': np.array([0.37]),
+        'hinge cabinet': np.array([0., 1.45]),
+        'microwave': np.array([-0.75]),
+        'kettle': np.array([-0.23, 0.75, 1.62, 0.99, 0., 0., -0.06]),
+        }
+        
     def __init__(self, dense=True, use_combined_action_space=False, **kwargs):
         self.tasks_to_complete = set(self.TASK_ELEMENTS)
         self.dense = dense
@@ -134,7 +152,7 @@ class KitchenBase(KitchenTaskRelaxV1):
                         left = obj_pos[0] < left_pad[0]
                         if right and left and within_sphere_right and within_sphere_left:
                             is_grasped = True
-            if element == 'top left burner':
+            if element == 'top burner':
                 is_grasped = False
                 if not self.initializing:
                     obj_pos = self.get_site_xpos("tlbhandle")
@@ -243,7 +261,7 @@ class KitchenBase(KitchenTaskRelaxV1):
 
 
 class KitchenMicrowaveKettleLightTopLeftBurnerV0(KitchenBase):
-    TASK_ELEMENTS = ["microwave", "kettle", "light switch", "top left burner"]
+    TASK_ELEMENTS = ["microwave", "kettle", "light switch", "top burner"]
     REMOVE_TASKS_WHEN_COMPLETE = True
 
 
@@ -439,7 +457,7 @@ class KitchenBottomLeftBurnerV0(KitchenBase):
 
 
 class KitchenTopLeftBurnerV0(KitchenBase):
-    TASK_ELEMENTS = ["top left burner"]
+    TASK_ELEMENTS = ["top burner"]
 
     def __init__(self, delta=0, **kwargs):
         super(KitchenTopLeftBurnerV0, self).__init__(**kwargs)

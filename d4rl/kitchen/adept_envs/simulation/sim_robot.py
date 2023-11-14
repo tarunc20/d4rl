@@ -277,7 +277,7 @@ class MujocoSimRobot:
         def site_jacp():
             jacps = np.zeros((model.nsite, 3 * model.nv))
             for i, jacp in enumerate(jacps):
-                jacp_view = jacp
+                jacp_view = jacp.reshape((3, -1))
                 mjlib.mj_jacSite(model.ptr, data.ptr, jacp_view, None, i)
             return jacps
 
@@ -289,7 +289,7 @@ class MujocoSimRobot:
         def site_jacr():
             jacrs = np.zeros((model.nsite, 3 * model.nv))
             for i, jacr in enumerate(jacrs):
-                jacr_view = jacr
+                jacr_view = jacr.reshape((3, -1))
                 mjlib.mj_jacSite(model.ptr, data.ptr, None, jacr_view, i)
             return jacrs
 
@@ -317,7 +317,7 @@ class MujocoSimRobot:
         def body_jacp():
             jacps = np.zeros((model.nbody, 3 * model.nv))
             for i, jacp in enumerate(jacps):
-                jacp_view = jacp
+                jacp_view = jacp.reshape((3, -1))
                 mjlib.mj_jacBody(model.ptr, data.ptr, jacp_view, None, i)
             return jacps
 
@@ -329,7 +329,7 @@ class MujocoSimRobot:
         def body_jacr():
             jacrs = np.zeros((model.nbody, 3 * model.nv))
             for i, jacr in enumerate(jacrs):
-                jacr_view = jacr
+                jacr_view = jacr.reshape((3, -1))
                 mjlib.mj_jacBody(model.ptr, data.ptr, None, jacr_view, i)
             return jacrs
 

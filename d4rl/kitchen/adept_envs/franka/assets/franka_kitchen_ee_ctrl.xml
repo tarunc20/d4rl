@@ -57,7 +57,7 @@
 
         <!-- Robot -->
         <body pos='0. 0 1.8' euler='0 0 1.57'>
-            <geom conaffinity="1" contype="0" type='cylinder' size='.120 .90' pos='-.04 0 -0.90' class='panda_viz'/>
+            <geom conaffinity="1" contype="0" type='cylinder' name='panda0_pedestal' size='.120 .90' pos='-.04 0 -0.90' class='panda_viz'/>
             <include file="../../../third_party/franka/assets/chain0.xml"/>
         </body>
 
@@ -86,7 +86,8 @@
             <freejoint/>
             <include file="../../../adept_models/kitchen/assets/kettle_chain.xml"/>
         </body>
-
+    <camera mode="fixed" name="leftview" pos="-.5 -1 2.25" quat=".7071 .7071 0 0"/>
+    <camera mode="fixed" name="birdview" pos="-0.2 0 3.0" quat="0.7071 0 0 0.7071"/>
     </worldbody>
 
 

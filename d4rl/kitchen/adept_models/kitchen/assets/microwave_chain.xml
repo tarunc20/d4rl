@@ -14,7 +14,7 @@
             <joint axis="0 0 1" limited="true" name="microjoint" range="-2.094 0"/>
             <geom mesh="microdoor" pos="0.345 0.176 -0.192"/>
             <geom material="micro_window" mesh="microwindow" pos="0.345 0.176 -0.192"/>
-            <geom material="micro_metal" pos="0.475 -0.108 0" size="0.02 0.13" type="capsule"/>
+            <geom material="micro_metal" name='mchandle' pos="0.475 -0.108 0" size="0.02 0.13" type="capsule"/>
             <geom material="micro_metal" euler="1.57 0 0" pos="0.475 -0.075 .13" size="0.02 0.03" type="capsule"/>
             <geom material="micro_metal" euler="1.57 0 0" pos="0.475 -0.075 -.13" size="0.02 0.03" type="capsule"/>
 

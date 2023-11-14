@@ -209,7 +209,11 @@ class KitchenV0(robot_env.RobotEnv):
             self.set_mocap_quat("mocap", gripper_rotation)
             for _ in range(10):
                 self.sim.step()
-
+        # add mjpy sim ability 
+        #mujoco_py = module.get_mujoco_py()
+        self.mjpy_model = mujoco_py.load_model_from_path(self.MODEL)
+        self.mjpy_sim = mujoco_py.MjSim(self.mjpy_model)
+        
         self.init_qpos = self.sim.model.key_qpos[0].copy()
         # For the microwave kettle slide hinge
         self.init_qpos = np.array(
@@ -382,8 +386,11 @@ class KitchenV0(robot_env.RobotEnv):
         if sim.model.nmocap > 0 and sim.model.eq_data is not None:
             for i in range(sim.model.eq_data.shape[0]):
                 if sim.model.eq_type[i] == mujoco_py.const.EQ_WELD:
-                    sim.model.eq_data[i, :] = np.array(
-                        [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]
+                    # sim.model.eq_data[i, :] = np.array(
+                    #     [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]
+                    # )
+                    sim.model.eq_data[i] = np.array(
+                        [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
                     )
         sim.forward()
 

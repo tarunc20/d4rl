@@ -81,7 +81,7 @@
         </body>
         <body name="knob 4" euler="1.57 0 0" pos="-0.271 0.22 1.357">
             <joint name="knob_Joint_4" axis="0 0 1" type="hinge" limited="true" range="-1.57 0"/>
-            <geom type="box" pos="0 0 .038" size=".014 .048 .018"/>
+            <geom type="box" name='tlb_handle1' pos="0 0 .038" size=".014 .048 .018"/>
             <geom type="cylinder" pos="0 0 .013" size=".05 .008"/>
             <geom type="cylinder" pos="0 0.048 .037" size=".014 .018" rgba="1 0 0 1"/>
 
@@ -104,7 +104,7 @@
             <body name="lightswitchroot">
                 <inertial pos="-0.0046 0.35 0.0131" mass=".1" diaginertia="0.001 0.001 0.001"/>
                 <joint axis="0 0 1" limited="true" name="lightswitch_joint" frictionloss="1" range="-.7 0"/>
-                <geom pos="0.0252 -0.06 0" euler="-1.57 -.4 0" size="0.02 0.035" type="capsule"/>
+                <geom name='lshandle' pos="0.0252 -0.06 0" euler="-1.57 -.4 0" size="0.02 0.035" type="capsule"/>
                 <geom class="oven_collision" euler="-1.57 -.4 0" pos="0.0263 -0.065 0" size="0.021 0.03" type="capsule" mass=".01"/>
                 <site type="sphere" name="light_site" pos="0.0315 -0.075 0" size=".01" group="3" rgba="1 0 0 1"/>
                 <site name="lshandle1" pos="0.0315 -0.075 0" rgba="0 0 1 0" size=".025"/>

@@ -10,12 +10,12 @@ from d4rl.kitchen.kitchen_envs import (
 )
 
 ALL_KITCHEN_ENVIRONMENTS = {
-    "microwave": KitchenMicrowaveV0,
-    "kettle": KitchenKettleV0,
-    "slide_cabinet": KitchenSlideCabinetV0,
-    "hinge_cabinet": KitchenHingeCabinetV0,
-    "top_left_burner": KitchenTopLeftBurnerV0,
-    "light_switch": KitchenLightSwitchV0,
+    "microwave-v0": KitchenMicrowaveV0,
+    "kettle-v0": KitchenKettleV0,
+    "slide-v0": KitchenSlideCabinetV0,
+    "hinge-v0": KitchenHingeCabinetV0,
+    "tlb-v0": KitchenTopLeftBurnerV0,
+    "light-v0": KitchenLightSwitchV0,
     "microwave_kettle_light_top_left_burner": KitchenMicrowaveKettleLightTopLeftBurnerV0,
     "hinge_slide_bottom_left_burner_light": KitchenHingeSlideBottomLeftBurnerLightV0,
 }

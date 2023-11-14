@@ -34,6 +34,12 @@
                                 <geom class="panda_col" mesh="link6_col" mass="1.3235"/>
                                 <body name="panda0_link7" pos="0.088 0 0" euler='1.57 0 0.7854'>
                                     <joint name="panda0_joint7" range="-2.8973 2.8973" class="panda_forearm"/>
+                                    <body name="right_hand" pos="0 0 0.1065" quat="0.924 0 0 -0.383">
+                                                <inertial pos="0 0 0" mass="0.0" diaginertia="0.00 0.00 0.00" />
+                                                <!-- This camera points out from the eef. -->
+                                                <camera mode="fixed" name="eye_in_hand" pos="0.05 0 0" quat="0 0.707108 0.707108 0" fovy="75"/>
+                                                <!-- to add gripper -->
+                                            </body>
                                     <!-- <body name="panda0_link7" pos="0.088 0 0" quat="0.707107 0.707107 0 0"> -->
                                     <!-- <joint name="panda0_joint7" range="-2.9671 2.9671" class="panda_forearm"/> -->
                                     <geom class="panda_viz" mesh="link7_viz"/>
@@ -106,5 +112,6 @@
                 </body>
             </body>
         </body>
+        
     </body>
 </mujocoinclude>
