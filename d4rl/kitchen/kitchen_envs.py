@@ -6,20 +6,26 @@ from gym.spaces.box import Box
 from d4rl.kitchen.adept_envs.franka.kitchen_multitask_v0 import KitchenTaskRelaxV1
 
 OBS_ELEMENT_INDICES = {
-    "bottom left burner": np.array([11, 12]),
-    "top burner": np.array([15, 16]),
+    "bottom left burner": np.array([11]), #correct
+    "bottom right burner": np.array([9]),
+    "top burner": np.array([15]), #correct
+    "top right burner": np.array([13]), #correct
     "light switch": np.array([17, 18]),
     "slide cabinet": np.array([19]),
-    "hinge cabinet": np.array([20, 21]),
+    "left hinge cabinet": np.array([20]),
+    "hinge cabinet": np.array([21]),
     "microwave": np.array([22]),
     "kettle": np.array([23, 24, 25, 26, 27, 28, 29]),
 }
 OBS_ELEMENT_GOALS = {
-    "bottom left burner": np.array([-0.88, -0.01]),
-    "top burner": np.array([-0.92, -0.01]),
+    "bottom left burner": np.array([-0.92]),
+    "bottom right burner": np.array([-0.92]),
+    "top burner": np.array([-0.92]),
+    "top right burner": np.array([-0.92]),
     "light switch": np.array([-0.69, -0.05]),
     "slide cabinet": np.array([0.37]),
-    "hinge cabinet": np.array([0.0, 1.45]),
+    "left hinge cabinet": np.array([-1.45]),
+    "hinge cabinet": np.array([1.45]),
     "microwave": np.array([-0.75]),
     "kettle": np.array([-0.23, 0.75, 1.62, 0.99, 0.0, 0.0, -0.06]),
 }
@@ -30,28 +36,34 @@ class KitchenBase(KitchenTaskRelaxV1):
     # A string of element names. The robot's task is then to modify each of
     # these elements appropriately.
     TASK_ELEMENTS = []
-    REMOVE_TASKS_WHEN_COMPLETE = False
-    TERMINATE_ON_TASK_COMPLETE = False
+    REMOVE_TASKS_WHEN_COMPLETE = True
+    TERMINATE_ON_TASK_COMPLETE = True
     OBS_ELEMENT_INDICES = {
-        'bottom burner': np.array([11, 12]),
-        'top burner': np.array([15, 16]),
-        'light switch': np.array([17, 18]),
-        'slide cabinet': np.array([19]),
-        'hinge cabinet': np.array([20, 21]),
-        'microwave': np.array([22]),
-        'kettle': np.array([23, 24, 25, 26, 27, 28, 29]),
-        }
+        "bottom left burner": np.array([11]),
+        "bottom right burner": np.array([9]),
+        "top burner": np.array([15]),
+        "top right burner": np.array([13]),
+        "light switch": np.array([17, 18]),
+        "slide cabinet": np.array([19]),
+        "left hinge cabinet": np.array([20]),
+        "hinge cabinet": np.array([21]),
+        "microwave": np.array([22]),
+        "kettle": np.array([23, 24, 25, 26, 27, 28, 29]),
+    }
     OBS_ELEMENT_GOALS = {
-        'bottom burner': np.array([-0.88, -0.01]),
-        'top burner': np.array([-0.92, -0.01]),
-        'light switch': np.array([-0.69, -0.05]),
-        'slide cabinet': np.array([0.37]),
-        'hinge cabinet': np.array([0., 1.45]),
-        'microwave': np.array([-0.75]),
-        'kettle': np.array([-0.23, 0.75, 1.62, 0.99, 0., 0., -0.06]),
-        }
+        "bottom left burner": np.array([-0.92]),
+        "bottom right burner": np.array([-0.92]),
+        "top burner": np.array([-0.92]),
+        "top right burner": np.array([-0.92]),
+        "light switch": np.array([-0.69, -0.05]),
+        "slide cabinet": np.array([0.37]),
+        "left hinge cabinet": np.array([-1.45]),
+        "hinge cabinet": np.array([1.45]),
+        "microwave": np.array([-0.75]),
+        "kettle": np.array([-0.23, 0.75, 1.62, 0.99, 0.0, 0.0, -0.06]),
+    }
         
-    def __init__(self, dense=True, use_combined_action_space=False, **kwargs):
+    def __init__(self, dense=False, use_combined_action_space=False, **kwargs):
         self.tasks_to_complete = set(self.TASK_ELEMENTS)
         self.dense = dense
         super(KitchenBase, self).__init__(**kwargs)
@@ -164,6 +176,18 @@ class KitchenBase(KitchenTaskRelaxV1):
                     left = obj_pos[0] < left_pad[0]
                     if within_sphere_right and within_sphere_left and right and left:
                         is_grasped = True
+            if element == 'top right burner':
+                is_grasped = False
+                if not self.initializing:
+                    obj_pos = self.get_site_xpos("trbhandle")
+                    left_pad = self.get_site_xpos('leftpad')
+                    right_pad = self.get_site_xpos('rightpad')
+                    within_sphere_left = np.linalg.norm(obj_pos-left_pad) < .035
+                    within_sphere_right = np.linalg.norm(obj_pos-right_pad) < .04
+                    right = right_pad[0] < obj_pos[0]
+                    left = obj_pos[0] < left_pad[0]
+                    if within_sphere_right and within_sphere_left and right and left:
+                        is_grasped = True
             if element == 'microwave':
                 is_grasped = False
                 if not self.initializing:
@@ -180,6 +204,17 @@ class KitchenBase(KitchenTaskRelaxV1):
                 if not self.initializing:
                     for i in range(1, 6):
                         obj_pos = self.get_site_xpos("hchandle{}".format(i))
+                        left_pad = self.get_site_xpos('leftpad')
+                        right_pad = self.get_site_xpos('rightpad')
+                        within_sphere_left = np.linalg.norm(obj_pos-left_pad) < .06
+                        within_sphere_right = np.linalg.norm(obj_pos-right_pad) < .06
+                        if right_pad[0] < obj_pos[0] and obj_pos[0] < left_pad[0] and within_sphere_right:
+                            is_grasped = True
+            if element == 'left hinge cabinet':
+                is_grasped = False
+                if not self.initializing:
+                    for i in range(1, 6):
+                        obj_pos = self.get_site_xpos("hchandle_left{}".format(i))
                         left_pad = self.get_site_xpos('leftpad')
                         right_pad = self.get_site_xpos('rightpad')
                         within_sphere_left = np.linalg.norm(obj_pos-left_pad) < .06
@@ -696,3 +731,47 @@ class KitchenLightSwitchV0(KitchenBase):
                 action_low = np.concatenate((act_lower_primitive, action_low))
                 action_high = np.concatenate((act_upper_primitive, action_high))
             self.action_space = Box(action_low, action_high, dtype=np.float32)
+
+class KitchenKettleLightBurnerSliderV0(KitchenBase):
+    TASK_ELEMENTS = ["kettle", "light switch", "top burner", "slide cabinet"]
+
+
+class KitchenKettleLightBurnerV0(KitchenBase):
+    TASK_ELEMENTS = ["kettle", "light switch", "top burner"]
+
+
+class KitchenKettleBurnerV0(KitchenBase):
+    TASK_ELEMENTS = ["kettle", "top burner"]
+
+
+class KitchenLightBurnerV0(KitchenBase):
+    TASK_ELEMENTS = ["light switch", "top burner"]
+
+
+class KitchenMicrowaveKettleLightBurnerSliderV0(KitchenBase):
+    TASK_ELEMENTS = [
+        "microwave",
+        "kettle",
+        "light switch",
+        "top burner",
+        "slide cabinet",
+    ]
+
+class KitchenHingeMicrowaveKettleLightBurnerSliderV0(KitchenBase):
+    TASK_ELEMENTS = [
+        "microwave",
+        "kettle",
+        "light switch",
+        "top burner",
+        "slide cabinet",
+        "hinge cabinet",
+    ]
+
+class KitchenLeftHingeCabinetV0(KitchenBase):
+    TASK_ELEMENTS = ["left hinge cabinet"]
+
+class KitchenTopRightBurnerV0(KitchenBase):
+    TASK_ELEMENTS = ["top right burner"]
+
+class KitchenBottomRightBurnerV0(KitchenBase):
+    TASK_ELEMENTS = ["bottom right burner"]

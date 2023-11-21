@@ -576,7 +576,7 @@ class KitchenV0(robot_env.RobotEnv):
     ):
         # clamp the pose within workspace limits:
         gripper = self.sim.data.qpos[7:9]
-        for _ in range(300):
+        for _ in range(2000):
             if self.use_workspace_limits:
                 pose = np.clip(pose, self.min_ee_pos, self.max_ee_pos)
             self.reset_mocap2body_xpos(self.sim)
