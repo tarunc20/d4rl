@@ -259,6 +259,16 @@ class KitchenBase(KitchenTaskRelaxV1):
         info["episodic cumulative reward"] = self.episodic_cumulative_reward
         return info
 
+class KitchenMS5V0(KitchenBase):
+    TASK_ELEMENTS = [
+        "microwave", 
+        "kettle", 
+        "light switch", 
+        "top burner",
+        "slide cabinet",
+    ]
+    REMOVE_TASKS_WHEN_COMPLETE = True 
+
 
 class KitchenMicrowaveKettleLightTopLeftBurnerV0(KitchenBase):
     TASK_ELEMENTS = ["microwave", "kettle", "light switch", "top burner"]

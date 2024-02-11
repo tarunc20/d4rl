@@ -7,6 +7,7 @@ from d4rl.kitchen.kitchen_envs import (
     KitchenMicrowaveV0,
     KitchenSlideCabinetV0,
     KitchenTopLeftBurnerV0,
+    KitchenMS5V0,
 )
 
 ALL_KITCHEN_ENVIRONMENTS = {
@@ -18,4 +19,5 @@ ALL_KITCHEN_ENVIRONMENTS = {
     "kitchen-light-v0": KitchenLightSwitchV0,
     "microwave_kettle_light_top_left_burner": KitchenMicrowaveKettleLightTopLeftBurnerV0,
     "hinge_slide_bottom_left_burner_light": KitchenHingeSlideBottomLeftBurnerLightV0,
+    "kitchen-ms5-v0": KitchenMS5V0
 }
