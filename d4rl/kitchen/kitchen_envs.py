@@ -16,6 +16,7 @@ OBS_ELEMENT_INDICES = {
     "hinge cabinet": np.array([21]),
     "microwave": np.array([22]),
     "kettle": np.array([23, 24, 25, 26, 27, 28, 29]),
+    "close hinge cabinet": np.array([13, 21])
 }
 OBS_ELEMENT_GOALS = {
     "bottom left burner": np.array([-0.92]),
@@ -28,6 +29,7 @@ OBS_ELEMENT_GOALS = {
     "hinge cabinet": np.array([1.45]),
     "microwave": np.array([-0.75]),
     "kettle": np.array([-0.23, 0.75, 1.62, 0.99, 0.0, 0.0, -0.06]),
+    "close hinge cabinet": np.array([-0.92, 0.0])
 }
 BONUS_THRESH = 0.3
 
@@ -294,6 +296,24 @@ class KitchenBase(KitchenTaskRelaxV1):
         info["episodic cumulative reward"] = self.episodic_cumulative_reward
         return info
 
+class KitchenMS5V0(KitchenBase):
+    TASK_ELEMENTS = ["microwave", "kettle", "light switch", "top burner", "slide cabinet"]
+    REMOVE_TASKS_WHEN_COMPLETE = True
+
+class KitchenMS10V0(KitchenBase):
+    TASK_ELEMENTS = [
+        "hinge cabinet",
+        "top right burner",
+        "bottom left burner",
+        "bottom right burner",
+        "close hinge cabinet",
+        "microwave", 
+        "kettle", 
+        "light switch", 
+        "top burner", 
+        "slide cabinet"
+    ]
+    REMOVE_TASKS_WHEN_COMPLETE = True 
 
 class KitchenMicrowaveKettleLightTopLeftBurnerV0(KitchenBase):
     TASK_ELEMENTS = ["microwave", "kettle", "light switch", "top burner"]

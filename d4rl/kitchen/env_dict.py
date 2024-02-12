@@ -18,4 +18,6 @@ ALL_KITCHEN_ENVIRONMENTS = {
     "kitchen-kettle-light-burner-slider-v0": KitchenKettleLightBurnerSliderV0,
     "kitchen-microwave-kettle-light-burner-slider-v0": KitchenMicrowaveKettleLightBurnerSliderV0,
     "kitchen-hinge-microwave-kettle-light-burner-slider-v0": KitchenHingeMicrowaveKettleLightBurnerSliderV0,
+    "kitchen-ms10-v0": KitchenMS10V0,
+    "kitchen-ms5-v0": KitchenMS5V0,
 }
