@@ -134,7 +134,7 @@ class KitchenBase(KitchenTaskRelaxV1):
         return new_goal
 
     def reset_model(self):
-        self.tasks_to_complete = set(self.TASK_ELEMENTS)
+        self.tasks_to_complete = self.TASK_ELEMENTS #set(self.TASK_ELEMENTS)
         self.episodic_cumulative_reward = 0
         return super(KitchenBase, self).reset_model()
 
@@ -239,6 +239,8 @@ class KitchenBase(KitchenTaskRelaxV1):
             complete = distance < BONUS_THRESH and is_grasped
             if complete:
                 completions.append(element)
+            else:
+                break 
         if self.REMOVE_TASKS_WHEN_COMPLETE:
             [self.tasks_to_complete.remove(element) for element in completions]
         bonus = float(len(completions))
