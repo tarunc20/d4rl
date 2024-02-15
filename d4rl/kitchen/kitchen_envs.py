@@ -16,7 +16,9 @@ OBS_ELEMENT_INDICES = {
     "hinge cabinet": np.array([21]),
     "microwave": np.array([22]),
     "kettle": np.array([23, 24, 25, 26, 27, 28, 29]),
-    "close hinge cabinet": np.array([13, 21])
+    "close hinge cabinet": np.array([13, 21]),
+    "close microwave": np.array([22, 23, 24, 25, 26, 27, 28, 29]),
+    "close slide": np.array([15, 19]),
 }
 OBS_ELEMENT_GOALS = {
     "bottom left burner": np.array([-0.92]),
@@ -30,6 +32,8 @@ OBS_ELEMENT_GOALS = {
     "microwave": np.array([-0.75]),
     "kettle": np.array([-0.23, 0.75, 1.62, 0.99, 0.0, 0.0, -0.06]),
     "close hinge cabinet": np.array([-0.92, 0.0])
+    "close microwave": np.array([0., -0.23, 0.75, 1.62, 0.99, 0.0, 0.0, -0.06]),
+    "close slide": np.array([-0.92, 0.0]),
 }
 BONUS_THRESH = 0.3
 
@@ -239,8 +243,6 @@ class KitchenBase(KitchenTaskRelaxV1):
             complete = distance < BONUS_THRESH and is_grasped
             if complete:
                 completions.append(element)
-            else:
-                break 
         if self.REMOVE_TASKS_WHEN_COMPLETE:
             [self.tasks_to_complete.remove(element) for element in completions]
         bonus = float(len(completions))
@@ -304,16 +306,16 @@ class KitchenMS5V0(KitchenBase):
 
 class KitchenMS10V0(KitchenBase):
     TASK_ELEMENTS = [
+        "microwave",
+        "kettle",
+        "close microwave",
+        "slide cabinet",
+        "top burner",
+        "close slide",
         "hinge cabinet",
-        "top right burner",
-        "bottom left burner",
-        "bottom right burner",
+        "light switch",
         "close hinge cabinet",
-        "microwave", 
-        "kettle", 
-        "light switch", 
-        "top burner", 
-        "slide cabinet"
+        "bottom right burner"
     ]
     REMOVE_TASKS_WHEN_COMPLETE = True 
 
