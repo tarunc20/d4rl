@@ -34,14 +34,14 @@
         <geom class="oven_collision" euler="0 1.57 0" pos="-0.015 -0.39 0.254" size="0.022 0.28" type="cylinder" mass=".2"/>
         <body name="knob 1" euler="1.57 0 0" pos="-0.148 0.22 1.243">
             <joint name="knob_Joint_1" axis="0 0 1" type="hinge" limited="true" range="-1.57 0"/>
-            <geom type="box" pos="0 0 .038" size=".014 .048 .018"/>
+            <geom type="box" name='brb_handle' pos="0 0 .038" size=".014 .048 .018"/>
             <geom type="cylinder" pos="0 0 .013" size=".05 .008"/>
             <geom type="cylinder" pos="0 0.048 .037" size=".014 .018" rgba="1 0 0 1"/>
 
             <geom class="oven_collision" type="box" pos="0 0 .038" size=".014 .048 .018" mass=".01"/>
             <geom class="oven_collision" type="cylinder" pos="0 0 .013" size=".05 .008" mass=".01"/>
             <site type="sphere" name="knob1_site" pos="0 0 .038" size=".01" group="3" rgba="1 1 0 1"/>
-
+            <site name="brbhandle" pos="0 .0 .04" rgba="0 0 1 0" size=".02"/>
         </body>
         <body name="Burner 1" pos="0.206 -0.119 0.61">
             <inertial pos="0 0 0" mass=".01" diaginertia="0.001 0.001 0.001"/>
@@ -50,14 +50,14 @@
         </body>
         <body name="knob 2" euler="1.57 0 0" pos="-0.271 0.22 1.243">
             <joint name="knob_Joint_2" axis="0 0 1" type="hinge" limited="true" range="-1.57 0"/>
-            <geom type="box" pos="0 0 .038" size=".014 .048 .018"/>
+            <geom type="box" name='blb_handle' pos="0 0 .038" size=".014 .048 .018"/>
             <geom type="cylinder" pos="0 0 .013" size=".05 .008"/>
             <geom type="cylinder" pos="0 0.048 .037" size=".014 .018" rgba="1 0 0 1"/>
 
             <geom class="oven_collision" type="box" pos="0 0 .038" size=".014 .048 .018" mass=".01"/>
             <geom class="oven_collision" type="cylinder" pos="0 0 .013" size=".05 .008" mass=".01"/>
             <site type="sphere" name="knob2_site" pos="0 0 .038" size=".01" group="3" rgba="0 0 1 1"/>
-
+            <site name="blbhandle" pos="0 .0 .04" rgba="0 0 1 0" size=".02"/>
         </body>
         <body name="Burner 2" pos="-0.24 -0.119 0.61">
             <inertial pos="0 0 0" mass=".01" diaginertia="0.001 0.001 0.001"/>
@@ -66,13 +66,14 @@
         </body>
         <body name="knob 3" euler="1.57 0 0" pos="-0.148 0.22 1.357">
             <joint name="knob_Joint_3" axis="0 0 1" type="hinge" limited="true" range="-1.57 0"/>
-            <geom type="box" pos="0 0 .038" size=".014 .048 .018"/>
+            <geom type="box" name='trb_handle' pos="0 0 .038" size=".014 .048 .018"/>
             <geom type="cylinder" pos="0 0 .013" size=".05 .008"/>
             <geom type="cylinder" pos="0 0.048 .037" size=".014 .018" rgba="1 0 0 1"/>
 
             <geom class="oven_collision" type="box" pos="0 0 .038" size=".014 .048 .018" mass=".01"/>
             <geom class="oven_collision" type="cylinder" pos="0 0 .013" size=".05 .008" mass=".01"/>
             <site type="sphere" name="knob3_site" pos="0 0 .038" size=".01" group="3" rgba="0 1 0 1"/>
+            <site name="trbhandle" pos="0 .0 .04" rgba="0 0 1 0" size=".02"/>
         </body>
         <body name="Burner 3" pos="0.204 0.322 0.61">
             <inertial pos="0 0 0" mass=".01" diaginertia="0.001 0.001 0.001"/>
@@ -81,7 +82,7 @@
         </body>
         <body name="knob 4" euler="1.57 0 0" pos="-0.271 0.22 1.357">
             <joint name="knob_Joint_4" axis="0 0 1" type="hinge" limited="true" range="-1.57 0"/>
-            <geom type="box" name='tlb_handle1' pos="0 0 .038" size=".014 .048 .018"/>
+            <geom type="box" name='tlb_handle' pos="0 0 .038" size=".014 .048 .018"/>
             <geom type="cylinder" pos="0 0 .013" size=".05 .008"/>
             <geom type="cylinder" pos="0 0.048 .037" size=".014 .018" rgba="1 0 0 1"/>
 

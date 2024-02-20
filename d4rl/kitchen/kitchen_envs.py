@@ -6,22 +6,34 @@ from gym.spaces.box import Box
 from d4rl.kitchen.adept_envs.franka.kitchen_multitask_v0 import KitchenTaskRelaxV1
 
 OBS_ELEMENT_INDICES = {
-    "bottom left burner": np.array([11, 12]),
-    "top burner": np.array([15, 16]),
+    "bottom left burner": np.array([11]), #correct
+    "bottom right burner": np.array([9]),
+    "top burner": np.array([15]), #correct
+    "top right burner": np.array([13]), #correct
     "light switch": np.array([17, 18]),
     "slide cabinet": np.array([19]),
-    "hinge cabinet": np.array([20, 21]),
+    "left hinge cabinet": np.array([20]),
+    "hinge cabinet": np.array([21]),
     "microwave": np.array([22]),
     "kettle": np.array([23, 24, 25, 26, 27, 28, 29]),
+    "close hinge cabinet": np.array([13, 21]),
+    "close microwave": np.array([22, 23, 24, 25, 26, 27, 28, 29]),
+    "close slide": np.array([15, 19]),
 }
 OBS_ELEMENT_GOALS = {
-    "bottom left burner": np.array([-0.88, -0.01]),
-    "top burner": np.array([-0.92, -0.01]),
+    "bottom left burner": np.array([-0.92]),
+    "bottom right burner": np.array([-0.92]),
+    "top burner": np.array([-0.92]),
+    "top right burner": np.array([-0.92]),
     "light switch": np.array([-0.69, -0.05]),
     "slide cabinet": np.array([0.37]),
-    "hinge cabinet": np.array([0.0, 1.45]),
+    "left hinge cabinet": np.array([-1.45]),
+    "hinge cabinet": np.array([1.45]),
     "microwave": np.array([-0.75]),
     "kettle": np.array([-0.23, 0.75, 1.62, 0.99, 0.0, 0.0, -0.06]),
+    "close hinge cabinet": np.array([-0.92, 0.0]),
+    "close microwave": np.array([0., -0.23, 0.75, 1.62, 0.99, 0.0, 0.0, -0.06]),
+    "close slide": np.array([-0.92, 0.0]),
 }
 BONUS_THRESH = 0.3
 
@@ -33,23 +45,35 @@ class KitchenBase(KitchenTaskRelaxV1):
     REMOVE_TASKS_WHEN_COMPLETE = False
     TERMINATE_ON_TASK_COMPLETE = False
     OBS_ELEMENT_INDICES = {
-        'bottom burner': np.array([11, 12]),
-        'top burner': np.array([15, 16]),
-        'light switch': np.array([17, 18]),
-        'slide cabinet': np.array([19]),
-        'hinge cabinet': np.array([20, 21]),
-        'microwave': np.array([22]),
-        'kettle': np.array([23, 24, 25, 26, 27, 28, 29]),
-        }
+        "bottom left burner": np.array([11]), #correct
+        "bottom right burner": np.array([9]),
+        "top burner": np.array([15]), #correct
+        "top right burner": np.array([13]), #correct
+        "light switch": np.array([17, 18]),
+        "slide cabinet": np.array([19]),
+        "left hinge cabinet": np.array([20]),
+        "hinge cabinet": np.array([21]),
+        "microwave": np.array([22]),
+        "kettle": np.array([23, 24, 25, 26, 27, 28, 29]),
+        "close hinge cabinet": np.array([13, 21]),
+        "close microwave": np.array([22, 23, 24, 25, 26, 27, 28, 29]),
+        "close slide": np.array([15, 19]),
+    }
     OBS_ELEMENT_GOALS = {
-        'bottom burner': np.array([-0.88, -0.01]),
-        'top burner': np.array([-0.92, -0.01]),
-        'light switch': np.array([-0.69, -0.05]),
-        'slide cabinet': np.array([0.37]),
-        'hinge cabinet': np.array([0., 1.45]),
-        'microwave': np.array([-0.75]),
-        'kettle': np.array([-0.23, 0.75, 1.62, 0.99, 0., 0., -0.06]),
-        }
+        "bottom left burner": np.array([-0.92]),
+        "bottom right burner": np.array([-0.92]),
+        "top burner": np.array([-0.92]),
+        "top right burner": np.array([-0.92]),
+        "light switch": np.array([-0.69, -0.05]),
+        "slide cabinet": np.array([0.37]),
+        "left hinge cabinet": np.array([-1.45]),
+        "hinge cabinet": np.array([1.45]),
+        "microwave": np.array([-0.75]),
+        "kettle": np.array([-0.23, 0.75, 1.62, 0.99, 0.0, 0.0, -0.06]),
+        "close hinge cabinet": np.array([-0.92, 0.0]),
+        "close microwave": np.array([0., -0.23, 0.75, 1.62, 0.99, 0.0, 0.0, -0.06]),
+        "close slide": np.array([-0.92, 0.0]),
+    }
         
     def __init__(self, dense=True, use_combined_action_space=False, **kwargs):
         self.tasks_to_complete = set(self.TASK_ELEMENTS)
@@ -260,12 +284,21 @@ class KitchenBase(KitchenTaskRelaxV1):
         return info
 
 class KitchenMS5V0(KitchenBase):
+    TASK_ELEMENTS = ["microwave", "kettle", "light switch", "top burner", "slide cabinet"]
+    REMOVE_TASKS_WHEN_COMPLETE = True
+
+class KitchenMS10V0(KitchenBase):
     TASK_ELEMENTS = [
-        "microwave", 
-        "kettle", 
-        "light switch", 
-        "top burner",
+        "microwave",
+        "kettle",
+        "close microwave",
         "slide cabinet",
+        "top burner",
+        "close slide",
+        "hinge cabinet",
+        "light switch",
+        "close hinge cabinet",
+        "bottom right burner"
     ]
     REMOVE_TASKS_WHEN_COMPLETE = True 
 
