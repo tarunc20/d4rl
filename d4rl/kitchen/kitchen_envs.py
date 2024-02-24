@@ -287,6 +287,42 @@ class KitchenMS5V0(KitchenBase):
     TASK_ELEMENTS = ["microwave", "kettle", "light switch", "top burner", "slide cabinet"]
     REMOVE_TASKS_WHEN_COMPLETE = True
 
+class KitchenMS6V0(KitchenBase):
+    TASK_ELEMENTS = [
+        "microwave", 
+        "kettle", 
+        "light switch", 
+        "top burner", 
+        "slide cabinet", 
+        "bottom right burner",
+    ]
+    REMOVE_TASKS_WHEN_COMPLETE = True 
+
+class KitchenMS7V0(KitchenBase):
+    TASK_ELEMENTS = [
+        "microwave", 
+        "kettle", 
+        "light switch", 
+        "top burner", 
+        "slide cabinet", 
+        "bottom right burner",
+        "hinge cabinet",
+    ]
+    REMOVE_TASKS_WHEN_COMPLETE = True 
+
+class KitchenMS8V0(KitchenBase):
+    TASK_ELEMENTS = [
+        "microwave", 
+        "kettle", 
+        "light switch", 
+        "top burner", 
+        "slide cabinet", 
+        "bottom right burner",
+        "hinge cabinet",
+        "bottom left burner",
+    ]
+    REMOVE_TASKS_WHEN_COMPLETE = True 
+
 class KitchenMS10V0(KitchenBase):
     TASK_ELEMENTS = [
         "microwave",
