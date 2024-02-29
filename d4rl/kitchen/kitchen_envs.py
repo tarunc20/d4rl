@@ -76,7 +76,7 @@ class KitchenBase(KitchenTaskRelaxV1):
     }
         
     def __init__(self, dense=True, use_combined_action_space=False, **kwargs):
-        self.tasks_to_complete = set(self.TASK_ELEMENTS)
+        self.tasks_to_complete = [_ for _ in self.TASK_ELEMENTS]
         self.dense = dense
         super(KitchenBase, self).__init__(**kwargs)
         combined_action_space_low = -1.4 * np.ones(self.max_arg_len)
@@ -144,7 +144,7 @@ class KitchenBase(KitchenTaskRelaxV1):
         return new_goal
 
     def reset_model(self):
-        self.tasks_to_complete = set(self.TASK_ELEMENTS)
+        self.tasks_to_complete = [_ for _ in self.TASK_ELEMENTS]
         self.episodic_cumulative_reward = 0
         return super(KitchenBase, self).reset_model()
 
@@ -226,6 +226,8 @@ class KitchenBase(KitchenTaskRelaxV1):
             complete = distance < BONUS_THRESH and is_grasped
             if complete:
                 completions.append(element)
+            else:
+                break
         if self.REMOVE_TASKS_WHEN_COMPLETE:
             [self.tasks_to_complete.remove(element) for element in completions]
         bonus = float(len(completions))
@@ -338,6 +340,35 @@ class KitchenMS10V0(KitchenBase):
     ]
     REMOVE_TASKS_WHEN_COMPLETE = True 
 
+class KitchenMS10V1(KitchenBase):
+    TASK_ELEMENTS = [
+        "kettle",
+        "light switch",
+        "slide cabinet",
+        "top burner",
+        "microwave",
+        "bottom right burner",
+        "hinge cabinet",
+        "top right burner",
+        "bottom left burner",
+        "close microwave",
+    ]
+    REMOVE_TASKS_WHEN_COMPLETE = True 
+
+class KitchenMS10V2(KitchenBase):
+    TASK_ELEMENTS = [
+        "kettle",
+        "light switch",
+        "slide cabinet",
+        "top burner",
+        "bottom right burner",
+        "top right burner",
+        "bottom left burner",
+        "microwave",
+        "hinge cabinet",
+        "close microwave",
+    ]
+    REMOVE_TASKS_WHEN_COMPLETE = True 
 
 class KitchenMicrowaveKettleLightTopLeftBurnerV0(KitchenBase):
     TASK_ELEMENTS = ["microwave", "kettle", "light switch", "top burner"]
