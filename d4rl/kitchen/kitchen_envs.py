@@ -370,6 +370,10 @@ class KitchenMS10V2(KitchenBase):
     ]
     REMOVE_TASKS_WHEN_COMPLETE = True 
 
+class KitchenKettleLightBurnerV0(KitchenBase):
+    TASK_ELEMENTS = ["kettle", "light switch", "top burner"]
+    REMOVE_TASKS_WHEN_COMPLETE = True 
+
 class KitchenMicrowaveKettleLightTopLeftBurnerV0(KitchenBase):
     TASK_ELEMENTS = ["microwave", "kettle", "light switch", "top burner"]
     REMOVE_TASKS_WHEN_COMPLETE = True
