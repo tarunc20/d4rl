@@ -16,6 +16,7 @@
 
 """Module for loading MuJoCo models."""
 
+from copy import copy
 import os
 from typing import Dict, Optional
 
@@ -26,6 +27,7 @@ from d4rl.kitchen.adept_envs.simulation.renderer import (
     RenderMode,
 )
 import numpy as np
+import xml.etree.ElementTree as ET
 
 
 class MujocoSimRobot:
@@ -59,7 +61,7 @@ class MujocoSimRobot:
             raise ValueError(
                 "[MujocoSimRobot] Invalid model file path: {}".format(model_file)
             )
-
+        self.model_file = model_file
         if self._use_dm_backend:
             dm_mujoco = module.get_dm_mujoco()
             if model_file.endswith(".mjb"):
@@ -185,7 +187,50 @@ class MujocoSimRobot:
                     return (joint_addr, joint_addr + ndim)
 
             model.get_joint_qvel_addr = lambda name: get_joint_qvel_addr(name)
-
+        
+        def get_xml():
+            temp_file = "/tmp/temp_mujoco_model.xml"
+            mjlib.mj_saveLastXML(temp_file, model.ptr)
+            with open(temp_file, "r") as f:
+                xml = f.read()
+            os.remove(temp_file)
+            xml_root = ET.fromstring(xml)
+            # convert all ../ to absolute path
+            for elem in xml_root.iter():
+                for attr in elem.attrib:
+                    # if "../" in elem.attrib[attr]:
+                    #     elem.attrib[attr] = elem.attrib[attr].replace("../", "")
+                    if "../" in elem.attrib[attr]:
+                        orig = copy(elem.attrib[attr].split("/")[0])
+                        while "../" in elem.attrib[attr]:
+                            elem.attrib[attr] = elem.attrib[attr].replace("../", "")
+                        # extract first part of the path
+                        first_part = elem.attrib[attr].split("/")[0]
+                        if first_part == "adept_models":
+                            import d4rl.kitchen as kitchen
+                            # get the absolute path
+                            abs_path = os.path.join(kitchen.__path__[0], elem.attrib[attr])
+                        elif first_part == 'scenes':
+                            import d4rl.kitchen.adept_models as adept_models
+                            abs_path = os.path.join(adept_models.__path__[0], elem.attrib[attr])
+                        elif first_part == 'kitchen':
+                            import d4rl.kitchen.adept_models as adept_models
+                            abs_path = os.path.join(adept_models.__path__[0], elem.attrib[attr])
+                        elif first_part == 'third_party':
+                            import d4rl.kitchen as kitchen
+                            abs_path = os.path.join(kitchen.__path__[0], elem.attrib[attr])
+                        else:
+                            print(first_part, orig)
+                        elem.attrib[attr] = abs_path
+            xml = ET.tostring(xml_root, encoding='unicode')   
+            # save to file
+            abs_path_temp_file = "/home/mdalal/temp_mujoco_model_abs_path.xml"
+            with open(abs_path_temp_file, "w") as f:
+                f.write(xml)
+            return xml
+        # load xml file
+        model.get_xml = lambda: get_xml()
+            
         if not hasattr(data, "body_xpos"):
             data.body_xpos = data.xpos
 
